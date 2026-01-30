@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap Pro | Gestión de Clientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex">
+
+    <aside class="w-64 bg-slate-900 text-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold border-b border-slate-800">
+            <i class="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span class="text-blue-400 text-xs">PRO</span>
+        </div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-columns mr-3 w-5"></i> Dashboard
+            </a>
+            <a href="agenda-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
+            </a>
+            <a href="clientes-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+                <i class="fas fa-users mr-3 w-5"></i> Clientes
+            </a>
+            <a href="profile-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-hospital mr-3 w-5"></i> Mi Clínica
+            </a>
+            <button onclick="logout()" class="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+                <i class="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Gestión de Clientes</h1>
+                <p class="text-gray-500 font-medium italic">Historiales clínicos y expedientes</p>
+            </div>
+            <div class="flex items-center space-x-6">
+                <p id="doctor-name-header-clientes" class="font-bold text-gray-800 font-mono">Cargando...</p>
+                <img id="clinic-logo-header-clientes" src="https://via.placeholder.com/50" class="rounded-full border-2 border-slate-900 shadow-lg w-12 h-12 object-cover">
+            </div>
+        </header>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <input type="text" id="search-input" placeholder="Buscar dueño o mascota..." class="border border-gray-300 p-2 rounded-lg flex-1 focus:ring-blue-500 outline-none">
+                <button onclick="loadClients()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold">
+                    <i class="fas fa-search mr-2"></i> Buscar
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b bg-gray-50 flex justify-between">
+                <h3 class="font-bold text-lg text-gray-800">Base de Datos de Clientes</h3>
+            </div>
+            <div id="clients-list" class="divide-y">
+                </div>
+        </div>
+
+        <div id="client-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+                
+                <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800" id="client-modal-title">Expediente Clínico</h3>
+                        <p class="text-sm text-slate-500" id="owner-name-modal">Dueño: ---</p>
+                    </div>
+                    <button onclick="closeClientModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+                </div>
+
+                <div class="flex flex-1 overflow-hidden">
+                    <div class="w-48 bg-slate-50 border-r p-4 overflow-y-auto" id="pet-selector-sidebar">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-3">Mascotas</p>
+                        </div>
+
+                    <div class="flex-1 p-6 overflow-y-auto">
+                        <input type="hidden" id="current-pet-id">
+                        
+                        <div id="clinical-history-entries" class="space-y-4 mb-8">
+                            <h4 class="font-bold text-slate-700 flex items-center">
+                                <i class="fas fa-history mr-2 text-blue-500"></i> Historial Reciente
+                            </h4>
+                            </div>
+
+                        <div class="bg-slate-50 p-6 rounded-xl border-2 border-dashed border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-4">Nueva Entrada de Consulta</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Fecha</label>
+                                    <input type="date" id="consultation-date" class="w-full border p-2 rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Tipo</label>
+                                    <select id="consultation-type" class="w-full border p-2 rounded-lg text-sm">
+                                        <option value="GENERAL">Consulta General</option>
+                                        <option value="URGENCY">Urgencia</option>
+                                        <option value="VACCINE">Vacunación / Desparasitación</option>
+                                        <option value="SURGERY">Cirugía</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Diagnóstico / Pruebas Realizadas</label>
+                                <textarea id="diagnosis" rows="3" class="w-full border p-3 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: Presenta otitis en oído derecho. Se realiza citología..."></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Medicación / Receta</label>
+                                    <textarea id="medication" rows="2" class="w-full border p-3 rounded-lg text-sm" placeholder="Ej: Amoxicilina 250mg 1 comp/12h"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Recomendaciones</label>
+                                    <textarea id="recommendations" rows="2" class="w-full border p-3 rounded-lg text-sm" placeholder="Ej: Dieta blanda 24h"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Adjuntar Pruebas (PDF, Imágenes)</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-slate-50 transition">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i class="fas fa-cloud-upload-alt text-slate-400 mb-2"></i>
+                                            <p class="text-xs text-slate-500">Haz clic para subir archivos médicos</p>
+                                        </div>
+                                        <input type="file" id="medical-files" class="hidden" multiple accept=".pdf,image/*" />
+                                    </label>
+                                </div>
+                                <div id="file-list-preview" class="mt-2 text-xs text-blue-600 font-bold"></div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <label class="flex items-center text-sm text-slate-600 cursor-pointer">
+                                    <input id="confirm-visit-checkbox" type="checkbox" class="w-4 h-4 text-blue-600 rounded mr-2">
+                                    Confirmar visita realizada
+                                </label>
+                                <button onclick="saveClinicalEntry()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
+                                    Guardar y Notificar al Dueño
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Lógica de archivos (Preview simple)
+        document.getElementById('medical-files').addEventListener('change', function(e) {
+            const list = document.getElementById('file-list-preview');
+            list.innerHTML = `Archivos seleccionados: ${e.target.files.length}`;
+        });
+
+       async function loadClients() {
+    const list = document.getElementById('clients-list');
+    list.innerHTML = '<p class="p-10 text-center text-slate-400">Cargando base de datos...</p>';
+    
+    try {
+        const resp = await fetch(`http://localhost:8080/api/users/my-clients`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const clients = await resp.json();
+        list.innerHTML = '';
+
+        clients.forEach(owner => {
+            list.innerHTML += `
+                <div class="p-6 flex items-center justify-between hover:bg-slate-50 transition">
+                    <div class="flex items-center space-x-4">
+                        <a href="profile-owner.html?id=${owner.owner_id}" class="bg-blue-100 p-3 rounded-full text-blue-600 hover:bg-blue-200 transition">
+                            <i class="fas fa-user"></i>
+                        </a>
+                        <div>
+                            <h4 class="font-bold text-slate-800 flex items-center">
+                                ${owner.owner_name}
+                                <a href="profile-owner.html?id=${owner.owner_id}" class="ml-2 text-xs text-blue-500 hover:underline font-normal">
+                                    <i class="fas fa-external-link-alt"></i> Ver Ficha
+                                </a>
+                            </h4>
+                            <p class="text-sm text-slate-500">${owner.pet_count} mascotas registradas</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="openExpediente('${owner.owner_id}', '${owner.owner_name}')" class="bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 px-4 py-2 rounded-lg transition text-sm">
+                            <i class="fas fa-notes-medical mr-1"></i> Historial Rápido
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    } catch(e) { 
+        list.innerHTML = '<p class="p-6 text-red-500">Error al conectar con el servidor.</p>'; 
+    }
+}
+
+        // Abrir el modal y cargar las mascotas de ese dueño
+        async function openExpediente(ownerId, ownerName) {
+            document.getElementById('owner-name-modal').textContent = `Dueño: ${ownerName}`;
+            const sidebar = document.getElementById('pet-selector-sidebar');
+            sidebar.innerHTML = '<p class="text-xs font-bold text-slate-400 uppercase mb-3">Mascotas</p>';
+
+            // Fetch de mascotas del dueño
+            const resp = await fetch(`http://localhost:8080/api/users/${ownerId}/pets`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const pets = await resp.json();
+
+            pets.forEach(pet => {
+                sidebar.innerHTML += `
+                    <button onclick="selectPetForHistory('${pet.id}', '${pet.name}')" class="w-full text-left p-3 rounded-lg mb-2 text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition border border-transparent focus:border-blue-300 focus:bg-blue-50 focus:text-blue-600">
+                        <i class="fas fa-paw mr-2"></i> ${pet.name}
+                    </button>
+                `;
+            });
+
+            document.getElementById('client-modal').classList.remove('hidden');
+            document.getElementById('client-modal').classList.add('flex');
+        }
+
+        function selectPetForHistory(petId, petName) {
+            document.getElementById('current-pet-id').value = petId;
+            document.getElementById('client-modal-title').textContent = `Expediente: ${petName}`;
+            loadPetHistory(petId);
+        }
+
+        async function loadPetHistory(petId) {
+            const container = document.getElementById('clinical-history-entries');
+            container.innerHTML = '<p class="text-sm text-slate-400">Cargando historial...</p>';
+            
+            const resp = await fetch(`http://localhost:8080/api/pets/${petId}/clinical-history`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const history = await resp.json();
+            container.innerHTML = '';
+
+            history.forEach(entry => {
+                container.innerHTML += `
+                    <div class="bg-white border p-4 rounded-xl shadow-sm">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">${entry.consultation_type || 'GENERAL'}</span>
+                            <span class="text-xs text-slate-400">${new Date(entry.consultation_date).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 mb-1">Diagnóstico:</p>
+                        <p class="text-sm text-slate-600 mb-3">${entry.diagnosis}</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2 rounded">
+                            <div><span class="font-bold">Receta:</span> ${entry.medication}</div>
+                            <div><span class="font-bold">Notas:</span> ${entry.recommendations}</div>
+                        </div>
+                        ${entry.has_files ? '<div class="mt-2 text-blue-500 font-bold text-[10px]"><i class="fas fa-paperclip"></i> Ver adjuntos</div>' : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function closeClientModal() {
+            document.getElementById('client-modal').className = 'hidden';
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        window.onload = loadClients;
+    </script>
+</body>
+</html>

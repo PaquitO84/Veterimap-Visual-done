@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap | Mi Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex">
+
+    <aside class="w-64 bg-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold text-blue-600 border-b">
+            <i class="fas fa-paw mr-2"></i> Veterimap
+        </div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-owner.html" class="flex items-center p-3 text-blue-600 bg-blue-50 rounded-lg font-bold">
+                <i class="fas fa-home mr-3 w-5"></i> Inicio
+            </a>
+            <a href="mascotas-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                <i class="fas fa-dog mr-3 w-5"></i> Mis Mascotas
+            </a>
+            <a href="citas-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                <i class="fas fa-calendar-alt mr-3 w-5"></i> Mis Citas
+            </a>
+            <a href="mapa.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition border-t mt-4">
+                <i class="fas fa-search mr-3 w-5"></i> Buscar Clínica
+            </a>
+            <button onclick="logout()" class="w-full flex items-center p-3 text-red-500 hover:bg-red-50 rounded-lg transition mt-10">
+                <i class="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800" id="welcome-message">Hola, Usuario 👋</h1>
+            <div class="flex items-center space-x-4">
+                <button class="relative p-2 text-gray-400 hover:text-blue-600">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notif-badge" class="absolute top-0 right-0 bg-red-500 w-2 h-2 rounded-full hidden"></span>
+                </button>
+                <img id="user-avatar" src="https://via.placeholder.com/40" class="rounded-full border-2 border-blue-600" alt="Perfil">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-gray-500 font-medium">Próxima Cita</p>
+                <h3 id="next-appointment-time" class="text-xl font-bold mt-2 text-gray-400 italic">No tienes citas próximas</h3>
+                <p id="next-appointment-vet" class="text-sm text-blue-600"></p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-gray-500 font-medium">Mascotas registradas</p>
+                <h3 id="pet-count" class="text-4xl font-bold mt-2">0</h3>
+            </div>
+            <a href="mascotas-owner.html" class="bg-blue-600 text-white p-6 rounded-xl shadow-lg hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
+                <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                <span class="font-bold">Gestionar / Añadir Mascota</span>
+            </a>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">Mis Mascotas</h2>
+            <a href="mascotas-owner.html" class="text-blue-600 font-bold hover:underline">Ver todas</a>
+        </div>
+
+        <div id="pets-preview-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p class="text-gray-500 italic">Cargando tus mascotas...</p>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        window.onload = async () => {
+            try {
+                // Decodificar Token para saludo
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                // Nota: Asegúrate de que tu backend incluya el "name" en los claims o haz un fetch a /api/me
+                document.getElementById('welcome-message').textContent = `Hola, ${payload.name || 'Usuario'} 👋`;
+
+                // Aquí llamarías a tus endpoints reales
+                // loadDashboardData(); 
+            } catch (err) {
+                console.error("Error al inicializar panel:", err);
+            }
+        };
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

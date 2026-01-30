@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap Pro | Expediente del Propietario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex">
+
+    <aside class="w-64 bg-slate-900 text-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold border-b border-slate-800">
+            <i class="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span class="text-blue-400 text-xs">PRO</span>
+        </div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-columns mr-3 w-5"></i> Dashboard
+            </a>
+            <a href="agenda-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
+            </a>
+            <a href="clientes-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+                <i class="fas fa-users mr-3 w-5"></i> Clientes
+            </a>
+            <a href="profile-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-hospital mr-3 w-5"></i> Mi Clínica
+            </a>
+            <button onclick="logout()" class="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+                <i class="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-start mb-10">
+            <div>
+                <div class="flex items-center gap-2 text-sm text-blue-600 font-bold mb-2 cursor-pointer" onclick="window.location.href='clientes-vet.html'">
+                    <i class="fas fa-arrow-left"></i> Volver a Clientes
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800" id="header-owner-name">Perfil del Propietario</h1>
+                <p class="text-gray-500 font-medium italic">Gestión de datos personales, facturación y mascotas vinculadas</p>
+            </div>
+            <div class="flex items-center space-x-6">
+                <button onclick="saveProfileChanges()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold shadow-lg shadow-blue-200">
+                    <i class="fas fa-save mr-2"></i> Guardar Cambios
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="bg-slate-50 p-6 border-b text-center">
+                        <div class="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border-4 border-white shadow-sm">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800" id="card-owner-name">Cargando...</h2>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1" id="owner-id-label">ID: #---</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">DNI / Identificación</label>
+                            <input type="text" id="owner-dni" class="w-full border-gray-200 border p-2 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Sin asignar">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Email de contacto</label>
+                            <input type="email" id="owner-email" class="w-full border-gray-200 border p-2 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Teléfono</label>
+                            <input type="text" id="owner-phone" class="w-full border-gray-200 border p-2 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Dirección Completa</label>
+                            <textarea id="owner-address" rows="2" class="w-full border-gray-200 border p-2 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <i class="fas fa-file-invoice-dollar absolute -right-4 -bottom-4 text-7xl text-slate-800"></i>
+                    <h4 class="text-sm font-bold text-slate-400 uppercase mb-4">Estado de Cuenta</h4>
+                    <div class="text-3xl font-bold mb-1">0.00€</div>
+                    <p class="text-xs text-green-400 font-medium mb-6">Sin facturas pendientes</p>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm font-bold transition relative z-10">
+                        Generar Nueva Factura
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b bg-gray-50 flex justify-between items-center">
+                        <h3 class="font-bold text-lg text-gray-800">Mascotas Vinculadas</h3>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition">
+                            <i class="fas fa-plus mr-1"></i> Nueva Mascota
+                        </button>
+                    </div>
+                    <div id="pets-container" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="animate-pulse flex space-x-4 p-4 border rounded-xl">
+                            <div class="rounded-full bg-slate-200 h-10 w-10"></div>
+                            <div class="flex-1 space-y-2 py-1">
+                                <div class="h-2 bg-slate-200 rounded"></div>
+                                <div class="h-2 bg-slate-200 rounded w-5/6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="font-bold text-lg text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-sticky-note mr-2 text-yellow-500"></i> Observaciones Internas
+                    </h3>
+                    <textarea id="owner-internal-notes" rows="4" class="w-full bg-yellow-50 border-yellow-100 border p-4 rounded-xl text-sm text-gray-700 focus:ring-0 outline-none" placeholder="Escribe aquí notas privadas sobre el cliente (ej: requiere atención especial, cliente VIP, etc...)"></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const ownerId = urlParams.get('id');
+
+        async function loadOwnerProfile() {
+            if (!ownerId) {
+                alert("No se ha proporcionado un ID de cliente.");
+                window.location.href = 'clientes-vet.html';
+                return;
+            }
+
+            try {
+                // 1. Fetch de datos del dueño (Ajusta la URL a tu API real)
+                const resp = await fetch(`http://localhost:8080/api/users/${ownerId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const owner = await resp.json();
+
+                // Rellenar campos
+                document.getElementById('header-owner-name').textContent = owner.name;
+                document.getElementById('card-owner-name').textContent = owner.name;
+                document.getElementById('owner-id-label').textContent = `ID: #${ownerId}`;
+                document.getElementById('owner-email').value = owner.email || '';
+                document.getElementById('owner-phone').value = owner.phone || '';
+                document.getElementById('owner-dni').value = owner.dni || '';
+                document.getElementById('owner-address').value = owner.address || '';
+                
+                // 2. Fetch de mascotas del dueño
+                const petsResp = await fetch(`http://localhost:8080/api/users/${ownerId}/pets`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const pets = await petsResp.json();
+                renderPets(pets);
+
+            } catch (error) {
+                console.error("Error cargando el perfil:", error);
+            }
+        }
+
+        function renderPets(pets) {
+            const container = document.getElementById('pets-container');
+            container.innerHTML = '';
+
+            if (pets.length === 0) {
+                container.innerHTML = '<p class="col-span-2 text-center py-4 text-slate-400">Este cliente no tiene mascotas registradas.</p>';
+                return;
+            }
+
+            pets.forEach(pet => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition group cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-white p-2 rounded-lg shadow-sm border group-hover:border-blue-300">
+                                <i class="fas fa-paw text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${pet.name}</h4>
+                                <p class="text-xs text-slate-500 capitalize">${pet.species || 'Especie'} • ${pet.breed || 'Raza'}</p>
+                            </div>
+                        </div>
+                        <button class="text-slate-300 group-hover:text-blue-600 transition">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        async function saveProfileChanges() {
+            // Lógica para guardar en BBDD
+            const updatedData = {
+                email: document.getElementById('owner-email').value,
+                phone: document.getElementById('owner-phone').value,
+                dni: document.getElementById('owner-dni').value,
+                address: document.getElementById('owner-address').value
+            };
+
+            alert("Simulación: Datos guardados correctamente en la base de datos.");
+            console.log("Datos a enviar al servidor:", updatedData);
+            // Aquí iría tu fetch(..., { method: 'PUT', body: JSON.stringify(updatedData) })
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        
+        window.onload = loadOwnerProfile;
+    </script>
+</body>
+</html>

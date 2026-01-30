@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Veterimap</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f5f8f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: #1cabb0; text-align: center; }
+        label { display: block; margin-top: 1rem; font-weight: 600; }
+        input { width: 100%; padding: 0.8rem; margin-top: 0.4rem; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 1rem; background: #1cabb0; color: white; border: none; border-radius: 8px; margin-top: 1.5rem; cursor: pointer; font-weight: bold; }
+        .link { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+            <label>Email</label>
+            <input type="email" id="email" required>
+            <label>Contraseña</label>
+            <input type="password" id="password" required>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="link">¿No tienes cuenta? <a href="registro.html" style="color: #1cabb0; text-decoration: none;">Regístrate aquí</a></div>
+    </div>
+
+    <script>
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const emailInput = document.getElementById('email').value;
+        const passwordInput = document.getElementById('password').value;
+        const data = { email: emailInput, password: passwordInput };
+
+        try {
+            const resp = await fetch('http://localhost:8080/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (resp.ok) {
+                const result = await resp.json();
+                const token = result.data ? result.data.token : (result.token || result.Token);
+
+                if (!token) {
+                    alert("Error: El servidor no envió una sesión válida.");
+                    return;
+                }
+
+                localStorage.setItem('token', token);
+
+                const parts = token.split('.');
+                const payloadJson = JSON.parse(atob(parts[1]));
+                const role = payloadJson.role; 
+                const userId = payloadJson.user_id;
+
+                console.log("Login exitoso. Rol:", role);
+
+                // --- LÓGICA DE REDIRECCIÓN INTELIGENTE ---
+                if (role === 'PROFESSIONAL') {
+                    // Verificamos si ya existe el perfil
+                    const checkProfile = await fetch(`http://localhost:8080/api/profiles/details?id=${userId}`);
+                    
+                    if (checkProfile.ok) {
+                        // Si el perfil existe (200 OK), vamos al Panel
+                        window.location.href = 'backoffice-vet.html';
+                    } else {
+                        // Si no existe (404 u otros), vamos al Formulario
+                        window.location.href = 'formulario-vet.html';
+                    }
+                } else if (role === 'PET_OWNER') {
+                    window.location.href = 'formulario-owner.html';
+                } else {
+                    alert("Rol no reconocido: " + role);
+                }
+            } else {
+                const errorData = await resp.json();
+                alert("Error: " + (errorData.error || "Credenciales incorrectas"));
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("Fallo en el login: " + err.message);
+        }
+    };
+</script>
+</body>
+</html>

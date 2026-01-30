@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Cuenta - Veterimap</title>
+    <link rel="stylesheet" href="css/style.css"> <style>
+        .verify-container { max-width: 400px; margin: 100px auto; padding: 20px; text-align: center; border: 1px solid #ddd; border-radius: 8px; }
+        .code-input { width: 100%; font-size: 24px; text-align: center; letter-spacing: 10px; margin: 20px 0; padding: 10px; }
+        .btn-verify { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <h2>Verifica tu email</h2>
+        <p>Introduce el código de 6 dígitos que aparece en tu terminal.</p>
+        <input type="text" id="verificationCode" class="code-input" maxlength="6" placeholder="000000">
+        <button onclick="confirmarCodigo()" class="btn-verify">Verificar Cuenta</button>
+        <p id="message" style="margin-top: 15px;"></p>
+    </div>
+
+    <script>
+        async function confirmarCodigo() {
+            const code = document.getElementById('verificationCode').value;
+            const email = localStorage.getItem('pendingEmail'); // Lo guardaremos al registrar
+            const messageEl = document.getElementById('message');
+
+            if (!email) {
+                messageEl.innerText = "Error: No se encontró el email. Por favor, regístrate de nuevo.";
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, code: code })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageEl.style.color = "green";
+                    messageEl.innerText = "¡Cuenta verificada! Redirigiendo al login...";
+                    setTimeout(() => { window.location.href = "login.html"; }, 2000);
+                } else {
+                    messageEl.style.color = "red";
+                    messageEl.innerText = data.error || "Código incorrecto";
+                }
+            } catch (error) {
+                messageEl.innerText = "Error de conexión con el servidor";
+            }
+        }
+    </script>
+</body>
+</html>

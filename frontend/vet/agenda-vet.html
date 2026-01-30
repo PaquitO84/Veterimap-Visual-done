@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap Pro | Agenda y Citas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex">
+
+    <aside class="w-64 bg-slate-900 text-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold border-b border-slate-800">
+            <i class="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span class="text-blue-400 text-xs">PRO</span>
+        </div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-columns mr-3 w-5"></i> Dashboard
+            </a>
+            <a href="agenda-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+                <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
+            </a>
+            <a href="clientes-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-users mr-3 w-5"></i> Clientes
+            </a>
+            <a href="profile-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-hospital mr-3 w-5"></i> Mi Clínica (Perfil)
+            </a>
+            <a href="formulario-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition border-t border-slate-800 pt-5">
+                <i class="fas fa-user-edit mr-3 w-5"></i> Editar Perfil
+            </a>
+            
+            <button onclick="logout()" class="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+                <i class="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Agenda y Citas</h1>
+                <p class="text-gray-500 font-medium italic">Gestiona tus próximas consultas</p>
+            </div>
+            <div class="flex items-center space-x-6">
+                <p id="doctor-name-header-agenda" class="font-bold text-gray-800">Cargando...</p>
+                <img id="clinic-logo-header-agenda" src="https://via.placeholder.com/50" class="rounded-full border-2 border-slate-900 shadow-lg w-12 h-12 object-cover" alt="Doctor">
+            </div>
+        </header>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <h3 class="font-bold text-lg text-gray-800 mb-4">Filtrar Citas</h3>
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <label for="date-picker" class="font-medium text-gray-700">Seleccionar Fecha:</label>
+                <input type="date" id="date-picker" class="border border-gray-300 p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <button onclick="loadAppointments()" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-search mr-2"></i> Buscar Citas
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800" id="current-date-title">Citas de Hoy: <span class="text-blue-600">--/--/----</span></h3>
+            </div>
+            <div id="appointments-list" class="divide-y">
+                <p class="p-6 text-gray-500 text-center" id="no-appointments-message">No hay citas para la fecha seleccionada.</p>
+            </div>
+        </div>
+
+        <div id="reschedule-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+            <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+                <h3 class="text-xl font-bold mb-4">Proponer nueva fecha/hora</h3>
+                <input type="hidden" id="reschedule-appointment-id">
+                <div class="mb-4">
+                    <label for="new-date" class="block text-sm font-medium text-gray-700">Nueva Fecha</label>
+                    <input type="date" id="new-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                </div>
+                <div class="mb-4">
+                    <label for="new-time" class="block text-sm font-medium text-gray-700">Nueva Hora</label>
+                    <input type="time" id="new-time" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeRescheduleModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md">Cancelar</button>
+                    <button onclick="sendRescheduleProposal()" class="px-4 py-2 bg-blue-600 text-white rounded-md">Enviar Propuesta</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api'; // Ajusta esto a tu URL de backend
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.user_id;
+
+        window.onload = async () => {
+            // Cargar datos del doctor en el header
+            try {
+                const resp = await fetch(`${API_BASE_URL}/profiles/details?id=${userId}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('doctor-name-header-agenda').textContent = data.name || 'Profesional';
+                    if (data.logo_url) {
+                        document.getElementById('clinic-logo-header-agenda').src = data.logo_url;
+                    }
+                }
+            } catch (err) {
+                console.error("Error al cargar datos del doctor:", err);
+            }
+
+            // Establecer fecha por defecto y cargar citas
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-picker').value = today;
+            document.getElementById('current-date-title').querySelector('span').textContent = new Date().toLocaleDateString();
+            loadAppointments();
+        };
+
+        async function loadAppointments() {
+            const date = document.getElementById('date-picker').value;
+            document.getElementById('current-date-title').querySelector('span').textContent = new Date(date).toLocaleDateString();
+            const appointmentsList = document.getElementById('appointments-list');
+            appointmentsList.innerHTML = ''; // Limpiar lista
+
+            try {
+                const resp = await fetch(`${API_BASE_URL}/users/appointments?date=${date}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!resp.ok) {
+                    const errorData = await resp.json();
+                    alert(`Error al cargar citas: ${errorData.error || resp.statusText}`);
+                    appointmentsList.innerHTML = '<p class="p-6 text-gray-500 text-center">Error al cargar citas.</p>';
+                    return;
+                }
+                const appointments = await resp.json();
+
+                if (appointments.length === 0) {
+                    appointmentsList.innerHTML = '<p class="p-6 text-gray-500 text-center" id="no-appointments-message">No hay citas para la fecha seleccionada.</p>';
+                    return;
+                }
+
+                appointments.forEach(app => {
+                    const row = `
+                        <div class="p-6 flex items-center justify-between border-b hover:bg-gray-50 transition">
+                            <div>
+                                <h4 class="font-bold text-lg text-blue-600">${new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</h4>
+                                <p class="text-gray-700">Paciente: ${app.pet_name || 'N/A'} (${app.pet_type || 'N/A'})</p>
+                                <p class="text-sm text-gray-500">Dueño: ${app.owner_name || 'N/A'}</p>
+                                <p class="text-sm italic text-gray-600">Motivo: ${app.reason || 'Consulta'}</p>
+                            </div>
+                            <div class="flex flex-col md:flex-row gap-2">
+                                ${app.status === 'PENDING' ? `
+                                    <button onclick="updateAppointmentStatus('${app.id}', 'CONFIRMED')" class="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-bold hover:bg-green-200">Confirmar</button>
+                                    <button onclick="showRescheduleModal('${app.id}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-bold hover:bg-blue-200">Proponer otra hora</button>
+                                    <button onclick="updateAppointmentStatus('${app.id}', 'CANCELLED')" class="bg-red-100 text-red-700 px-3 py-1 rounded text-xs font-bold hover:bg-red-200">Rechazar</button>
+                                ` : `
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusClass(app.status)}">${app.status}</span>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                    appointmentsList.innerHTML += row;
+                });
+
+            } catch (err) {
+                console.error("Error en loadAppointments:", err);
+                appointmentsList.innerHTML = '<p class="p-6 text-red-500 text-center">No se pudieron cargar las citas. Intente de nuevo.</p>';
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'PENDING': return 'bg-yellow-100 text-yellow-700';
+                case 'CONFIRMED': return 'bg-green-100 text-green-700';
+                case 'CANCELLED': return 'bg-red-100 text-red-700';
+                case 'REALIZADA': return 'bg-purple-100 text-purple-700'; // Nuevo estado
+                default: return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        async function updateAppointmentStatus(appointmentId, newStatus) {
+            if (!confirm(`¿Está seguro de cambiar el estado a ${newStatus}?`)) return;
+
+            try {
+                const resp = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!resp.ok) {
+                    const errorData = await resp.json();
+                    alert(`Error al actualizar cita: ${errorData.error || resp.statusText}`);
+                    return;
+                }
+                alert('Estado de cita actualizado con éxito.');
+                loadAppointments(); // Recargar la lista de citas
+            } catch (err) {
+                console.error("Error al actualizar estado:", err);
+                alert('Error al conectar con el servidor para actualizar el estado.');
+            }
+        }
+
+        function showRescheduleModal(appointmentId) {
+            document.getElementById('reschedule-appointment-id').value = appointmentId;
+            document.getElementById('reschedule-modal').classList.remove('hidden');
+            document.getElementById('reschedule-modal').classList.add('flex');
+        }
+
+        function closeRescheduleModal() {
+            document.getElementById('reschedule-modal').classList.remove('flex');
+            document.getElementById('reschedule-modal').classList.add('hidden');
+            document.getElementById('new-date').value = '';
+            document.getElementById('new-time').value = '';
+        }
+
+        async function sendRescheduleProposal() {
+            const appointmentId = document.getElementById('reschedule-appointment-id').value;
+            const newDate = document.getElementById('new-date').value;
+            const newTime = document.getElementById('new-time').value;
+
+            if (!newDate || !newTime) {
+                alert('Por favor, selecciona una nueva fecha y hora.');
+                return;
+            }
+
+            // Aquí se enviaría la propuesta de reagendar al backend.
+            // Esto es un placeholder. El backend debería enviar una notificación al dueño.
+            alert(`Propuesta enviada para cita ${appointmentId}: ${newDate} a las ${newTime}.`);
+            console.log(`Proponiendo reagendar cita ${appointmentId} para ${newDate} a las ${newTime}`);
+            closeRescheduleModal();
+            // loadAppointments(); // Opcional: recargar si el backend cambia el estado a "Propuesta"
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

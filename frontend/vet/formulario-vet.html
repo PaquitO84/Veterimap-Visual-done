@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ficha Profesional | Veterimap</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #f5f8f9; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        #welcomeBar { width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #e0f7f9; border-bottom: 1px solid #cceeee; font-weight: 600; }
+        #logoutBtn { background: #ff4d4d; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
+
+        .form-container { background: #fff; padding: 2rem; border-radius: 12px; width: 100%; max-width: 1000px; margin: 2rem 1rem; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #1cabb0; margin-bottom: 1rem; }
+        h3 { border-bottom: 2px solid #e0f7f9; padding-bottom: 5px; color: #333; margin-top: 2rem; }
+        
+        label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #333; margin-top: 1rem; }
+        input, textarea, select { width: 100%; padding: 0.7rem; margin-bottom: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
+
+        .checkbox-group { margin: 1rem 0; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem; background: #fafafa; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+        .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer; margin-top: 0; }
+        .checkbox-group input[type="checkbox"] { width: auto; transform: scale(1.2); accent-color: #1cabb0; }
+
+        .tarifas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
+        .tarifa-row { display: flex; gap: 0.5rem; align-items: center; }
+        
+        .ubicacion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        
+        .btn-submit { width: 100%; background-color: #1cabb0; color: #fff; border: none; padding: 1rem; font-size: 1.1rem; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 2rem; }
+        .btn-add { background-color: #e0f7f9; color: #1cabb0; border: 1px solid #1cabb0; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        
+        .preview { display: flex; justify-content: center; margin-bottom: 1rem; }
+        .preview img { max-width: 150px; border-radius: 12px; border: 2px solid #1cabb0; }
+        .success-msg { display: none; background: #d4edda; color: #155724; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+
+<div id="welcomeBar">
+    <span id="welcomeMsg">Panel Profesional Veterimap</span>
+    <button id="logoutBtn">Cerrar sesión</button>
+</div>
+
+<div class="form-container">
+    <div id="successMsg" class="success-msg">¡Ficha actualizada correctamente en el sistema! ✅</div>
+    <h2>Ficha del Veterinario / Clínica</h2>
+    
+    <form id="vetForm">
+        <h3>Información General</h3>
+        <label>Logo o foto profesional (URL)</label>
+        <input type="text" id="logo_url" placeholder="URL de la imagen (o déjalo vacío)">
+        
+        <label>Selecciona tipo de ficha</label>
+        <select id="profile_type" required>
+            <option value="CLINIC">Clínica veterinaria</option>
+            <option value="HOSPITAL">Hospital 24h</option>
+            <option value="INDIVIDUAL">Veterinario autónomo / Domicilio</option>
+            <option value="TRAINER">Adiestrador</option>
+        </select>
+
+        <label>Nombre profesional o Clínica</label>
+        <input type="text" id="name" required>
+
+        <div class="ubicacion-grid">
+            <div>
+                <label>Ciudad</label>
+                <input type="text" id="city" required>
+            </div>
+            <div>
+                <label>Código Postal</label>
+                <input type="text" id="postal_code" required>
+            </div>
+        </div>
+
+        <label>Dirección completa</label>
+        <input type="text" id="address" required>
+
+        <div class="ubicacion-grid">
+            <div>
+                <label>Latitud</label>
+                <input type="text" id="lat" placeholder="41.40338" required>
+            </div>
+            <div>
+                <label>Longitud</label>
+                <input type="text" id="lng" placeholder="2.17403" required>
+            </div>
+        </div>
+
+        <label>Teléfono de contacto</label>
+        <input type="tel" id="phone" required>
+
+        <label>Correo electrónico público</label>
+        <input type="email" id="contact_email" required>
+
+        <h3>Detalles Profesionales</h3>
+        <label>Número de colegiado</label>
+        <input type="text" id="license_number">
+        
+        <label>Experiencia / Años</label>
+        <input type="text" id="experience">
+
+        <label>Horario de atención</label>
+        <input type="text" id="opening_hours" placeholder="L-V 9:00 - 20:00" required>
+
+        <label>¿Aceptas aseguradoras?</label>
+        <select id="accepts_insurance">
+            <option value="false">No</option>
+            <option value="true">Sí</option>
+        </select>
+        <input type="text" id="insurance_names" placeholder="¿Cuáles? (SantéVet, Petplan...)">
+
+        <h3>Servicios y Especialidades</h3>
+        
+        <label>Servicios de Clínica</label>
+        <div class="checkbox-group" data-group="services_list">
+            <label><input type="checkbox" value="Consultas"> Consultas</label>
+            <label><input type="checkbox" value="Vacunación"> Vacunación</label>
+            <label><input type="checkbox" value="Cirugía"> Cirugía</label>
+            <label><input type="checkbox" value="Urgencias"> Urgencias</label>
+            <label><input type="checkbox" value="Peluquería"> Peluquería</label>
+        </div>
+
+        <label>Hospitalización y UCI</label>
+        <div class="checkbox-group" data-group="uci_services">
+            <label><input type="checkbox" value="UCI"> UCI</label>
+            <label><input type="checkbox" value="Hosp. Gatos"> Hosp. Gatos</label>
+            <label><input type="checkbox" value="Hosp. Perros"> Hosp. Perros</label>
+            <label><input type="checkbox" value="Infecciosos"> Infecciosos</label>
+        </div>
+
+        <label>Pruebas Diagnósticas</label>
+        <div class="checkbox-group" data-group="diagnostic_tests">
+            <label><input type="checkbox" value="Ecografía"> Ecografía</label>
+            <label><input type="checkbox" value="Radiología"> Radiología</label>
+            <label><input type="checkbox" value="Laboratorio"> Laboratorio</label>
+            <label><input type="checkbox" value="TAC"> TAC</label>
+        </div>
+
+        <h3>Tarifas Orientativas</h3>
+        <div class="tarifas-grid" id="tarifasContainer">
+            <div class="tarifa-row">
+                <input type="text" class="tarifa-input" placeholder="Ej: Consulta: 35€">
+            </div>
+        </div>
+        <button type="button" class="btn-add" id="btnAddTarifa">➕ Añadir otra tarifa</button>
+
+        <label>Descripción detallada</label>
+        <textarea id="description" rows="5" required></textarea>
+
+        <button type="submit" class="btn-submit">Guardar Perfil en Veterimap</button>
+    </form>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    window.onload = async () => {
+        const parts = token.split('.');
+        const payload = JSON.parse(atob(parts[1]));
+        const userId = payload.user_id;
+
+        try {
+            const resp = await fetch(`http://localhost:8080/api/profiles/details?id=${userId}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                
+                // Rellenar campos de texto
+                document.getElementById('name').value = data.name || '';
+                document.getElementById('city').value = data.city || '';
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('contact_email').value = data.contact_email || '';
+                document.getElementById('description').value = data.description || '';
+                document.getElementById('opening_hours').value = data.opening_hours || '';
+                document.getElementById('lat').value = data.latitude || '';
+                document.getElementById('lng').value = data.longitude || '';
+
+                // --- NUEVO: MARCAR CHECKBOXES GUARDADOS ---
+                if (data.services_list && Array.isArray(data.services_list)) {
+                    data.services_list.forEach(servicio => {
+                        const cb = document.querySelector(`input[value="${servicio}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                }
+                
+                console.log("Datos cargados correctamente");
+            }
+        } catch (err) {
+            console.log("Modo creación activo");
+        }
+    };
+
+    async function autocompletarCoordenadas() {
+        const calle = document.getElementById('address').value;
+        const ciudad = document.getElementById('city').value;
+        if (calle.length > 5 && ciudad.length > 2) {
+            const query = encodeURIComponent(`${calle}, ${ciudad}`);
+            try {
+                const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await resp.json();
+                if (data.length > 0) {
+                    document.getElementById('lat').value = data[0].lat;
+                    document.getElementById('lng').value = data[0].lon;
+                }
+            } catch (err) {}
+        }
+    }
+
+    document.getElementById('address').addEventListener('blur', autocompletarCoordenadas);
+    document.getElementById('city').addEventListener('blur', autocompletarCoordenadas);
+
+    document.getElementById('btnAddTarifa').onclick = () => {
+        const row = document.createElement('div');
+        row.className = 'tarifa-row';
+        row.innerHTML = `<input type="text" class="tarifa-input" placeholder="Ej: Vacuna: 40€">
+                         <button type="button" style="color:red;" onclick="this.parentElement.remove()">❌</button>`;
+        document.getElementById('tarifasContainer').appendChild(row);
+    };
+
+    // --- ENVÍO AL BACKEND CORREGIDO ---
+    document.getElementById('vetForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const getChecks = (groupName) => {
+            return Array.from(document.querySelectorAll(`.checkbox-group[data-group="${groupName}"] input:checked`)).map(cb => cb.value);
+        };
+
+        // UNIFICAMOS TODOS LOS GRUPOS EN LA LISTA QUE GO ENTIENDE
+        const todosLosServicios = [
+            ...getChecks('services_list'),
+            ...getChecks('uci_services'),
+            ...getChecks('diagnostic_tests')
+        ];
+
+        // RECOGEMOS TARIFAS
+        const tarifas = Array.from(document.querySelectorAll('.tarifa-input'))
+                             .map(i => i.value)
+                             .filter(v => v !== "");
+
+        const profileData = {
+            profile_type: document.getElementById('profile_type').value,
+            name: document.getElementById('name').value,
+            city: document.getElementById('city').value,
+            address: document.getElementById('address').value,
+            // Guardamos las tarifas al final de la descripción para no perderlas
+            description: document.getElementById('description').value + (tarifas.length ? "\n\nTarifas: " + tarifas.join(" | ") : ""),
+            phone: document.getElementById('phone').value,
+            contact_email: document.getElementById('contact_email').value,
+            license_number: document.getElementById("license_number").value,
+            opening_hours: document.getElementById("opening_hours").value,
+            latitude: parseFloat(document.getElementById('lat').value),
+            longitude: parseFloat(document.getElementById('lng').value),
+            services_list: todosLosServicios // Ahora enviamos la lista completa
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/api/me/profile/professional', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(profileData)
+            });
+
+            if (response.ok) {
+                document.getElementById('successMsg').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => { window.location.href = 'backoffice-vet.html'; }, 2000);
+            } else {
+                alert("Error al guardar en el servidor");
+            }
+        } catch (err) {
+            alert("Error de conexión");
+        }
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    };
+</script>
+</body>
+</html>

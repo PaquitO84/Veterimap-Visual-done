@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap | Mis Citas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex">
+    <aside class="w-64 bg-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold text-blue-600 border-b"><i class="fas fa-paw mr-2"></i> Veterimap</div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i class="fas fa-home mr-3 w-5"></i> Inicio</a>
+            <a href="mascotas-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i class="fas fa-dog mr-3 w-5"></i> Mis Mascotas</a>
+            <a href="citas-owner.html" class="flex items-center p-3 text-blue-600 bg-blue-50 rounded-lg font-bold"><i class="fas fa-calendar-alt mr-3 w-5"></i> Mis Citas</a>
+            <a href="mapa.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition border-t mt-4"><i class="fas fa-search mr-3 w-5"></i> Buscar Clínica</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">Mis Citas</h1>
+            <p class="text-gray-500">Gestiona tus reservas y visitas pendientes</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="px-6 py-4 font-bold text-sm text-gray-500 uppercase">Mascota</th>
+                        <th class="px-6 py-4 font-bold text-sm text-gray-500 uppercase">Veterinario</th>
+                        <th class="px-6 py-4 font-bold text-sm text-gray-500 uppercase">Fecha y Hora</th>
+                        <th class="px-6 py-4 font-bold text-sm text-gray-500 uppercase">Estado</th>
+                        <th class="px-6 py-4 font-bold text-sm text-gray-500 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-bold">Rex</td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-bold">Dr. Alberto Ruíz</p>
+                            <p class="text-xs text-blue-600">Centro Veterinario Norte</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm">15 Ene 2026</p>
+                            <p class="text-xs text-red-500 font-bold">Nueva propuesta: 16:30</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold italic">Cambio propuesto</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                <button onclick="acceptChange('id')" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Aceptar</button>
+                                <button onclick="cancelAppointment('id')" class="text-xs border border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-50">Cancelar</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-bold">Misi</td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-bold">Clínica San Francisco</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm">20 Ene 2026 - 10:00</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Confirmada</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="modifyAppointment('id')" class="text-gray-400 hover:text-blue-600"><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

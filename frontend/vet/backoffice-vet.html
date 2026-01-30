@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veterimap Pro | Gestión de Clínica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 flex">
+
+    <aside class="w-64 bg-slate-900 text-white h-screen shadow-md sticky top-0 hidden md:block">
+        <div class="p-6 text-2xl font-bold border-b border-slate-800">
+            <i class="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span class="text-blue-400 text-xs">PRO</span>
+        </div>
+        <nav class="mt-6 px-4 space-y-2">
+            <a href="backoffice-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+                <i class="fas fa-columns mr-3 w-5"></i> Dashboard
+            </a>
+            <a href="agenda-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
+            </a>
+            <a href="clientes-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-users mr-3 w-5"></i> Clientes
+            </a>
+            <a href="profile-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                <i class="fas fa-hospital mr-3 w-5"></i> Mi Perfil Público
+            </a>
+            <a href="formulario-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition border-t border-slate-800 pt-5">
+                <i class="fas fa-user-edit mr-3 w-5"></i> Editar Datos
+            </a>
+            
+            <button onclick="logout()" class="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+                <i class="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Panel de Control</h1>
+                <p id="clinic-name-header" class="text-gray-500 font-medium italic">Cargando...</p>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right">
+                    <p id="doctor-name-header" class="font-bold text-gray-800">Cargando...</p>
+                    <p id="subscription-badge" class="text-xs font-bold uppercase tracking-wider text-blue-500">Calculando Trial...</p>
+                </div>
+                <img id="clinic-logo-header" src="https://via.placeholder.com/50" class="rounded-full border-2 border-slate-900 shadow-lg w-12 h-12 object-cover" alt="Doctor">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-xs font-bold uppercase">Citas Hoy</p>
+                    <h3 id="stats-citas-hoy" class="text-3xl font-black">0</h3>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fas fa-calendar-day"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-xs font-bold uppercase">Días de Trial</p>
+                    <h3 id="stats-trial-days" class="text-3xl font-black">--</h3>
+                </div>
+                <div class="bg-orange-50 text-orange-600 p-3 rounded-lg"><i class="fas fa-clock"></i></div>
+            </div>
+            <a href="clientes-vet.html" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition">
+                <div>
+                    <p class="text-gray-400 text-xs font-bold uppercase">Mis Clientes</p>
+                    <h3 class="text-sm font-bold text-blue-600 mt-1">Ver listado <i class="fas fa-chevron-right ml-1"></i></h3>
+                </div>
+                <div class="bg-green-50 text-green-600 p-3 rounded-lg"><i class="fas fa-users"></i></div>
+            </a>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800">Próximas Citas (Resumen)</h3>
+                <a href="agenda-vet.html" class="text-blue-600 font-bold text-sm hover:underline">Ver agenda completa <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-400 text-xs uppercase font-bold border-b">
+                        <tr>
+                            <th class="px-6 py-4">Hora</th>
+                            <th class="px-6 py-4">Paciente</th>
+                            <th class="px-6 py-4">Dueño</th>
+                            <th class="px-6 py-4">Estado</th>
+                            <th class="px-6 py-4 text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-citas-body" class="divide-y">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Cargando citas del día...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const API_BASE = 'http://localhost:8080/api';
+
+        if (!token) window.location.href = 'login.html';
+
+        window.onload = async () => {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const userId = payload.user_id;
+
+            // 1. Obtener Perfil y Datos de Suscripción/Trial
+            try {
+                const resp = await fetch(`${API_BASE}/profiles/details?id=${userId}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('clinic-name-header').textContent = data.name || 'Mi Perfil Profesional';
+                    document.getElementById('doctor-name-header').textContent = data.name || 'Veterinario';
+                    if (data.logo_url) document.getElementById('clinic-logo-header').src = data.logo_url;
+                }
+                
+                // Simulación de cálculo de Trial (esto vendrá del backend en el futuro)
+                const trialDaysLeft = 52; // Ejemplo
+                document.getElementById('stats-trial-days').textContent = trialDaysLeft;
+                const badge = document.getElementById('subscription-badge');
+                if(trialDaysLeft <= 10) {
+                    badge.textContent = `Trial: ${trialDaysLeft} días (Renovar pronto)`;
+                    badge.className = "text-xs text-red-500 font-bold uppercase tracking-wider";
+                } else {
+                    badge.textContent = `Periodo de Prueba: ${trialDaysLeft} días`;
+                }
+
+            } catch (err) {
+                console.error("Error al cargar perfil:", err);
+            }
+
+            // 2. Cargar Citas de Hoy (Vista simplificada)
+            loadTodaySummary();
+        };
+
+        async function loadTodaySummary() {
+            const today = new Date().toISOString().split('T')[0];
+            try {
+                const resp = await fetch(`${API_BASE}/users/appointments?date=${today}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const appointments = await resp.json();
+                const body = document.getElementById('table-citas-body');
+                body.innerHTML = '';
+
+                if (!appointments || appointments.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">No tienes citas programadas para hoy.</td></tr>';
+                    return;
+                }
+
+                document.getElementById('stats-citas-hoy').textContent = appointments.length;
+
+                appointments.slice(0, 5).forEach(app => { // Solo mostramos las 5 primeras
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-bold text-blue-600">${new Date(app.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td class="px-6 py-4 font-medium text-gray-800">${app.pet_name || 'Mascota'}</td>
+                            <td class="px-6 py-4 text-gray-500">${app.owner_name || 'Cliente'}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusStyle(app.status)}">
+                                    ${app.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="agenda-vet.html" class="text-blue-500 hover:text-blue-700 font-bold text-sm">Gestionar</a>
+                            </td>
+                        </tr>
+                    `;
+                    body.innerHTML += row;
+                });
+            } catch (err) {
+                console.error("Error al cargar resumen de citas:", err);
+            }
+        }
+
+        function getStatusStyle(status) {
+            switch(status) {
+                case 'PENDING': return 'bg-yellow-100 text-yellow-700';
+                case 'CONFIRMED': return 'bg-green-100 text-green-700';
+                case 'REALIZADA': return 'bg-purple-100 text-purple-700';
+                default: return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

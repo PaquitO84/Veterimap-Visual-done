@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  backend:
+    build: ./vete-api  # Ajusta a la ruta de tu backend en Go
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=tu_url_de_base_de_datos
+
+  frontend:
+    build: ./vete-web
+    ports:
+      - "5173:80" # Mapeamos el puerto 80 del contenedor al 5173 de tu PC
+    depends_on:
+      - backend

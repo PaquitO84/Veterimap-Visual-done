@@ -1,0 +1,18 @@
+# Binarios y Ejecutables
+*.exe
+*.exe~
+bin/
+api/main
+
+# Dependencias (Go las gestiona con go.mod)
+vendor/
+
+# Variables de entorno y secretos (¡MUY IMPORTANTE!)
+.env
+config.yaml
+
+# Archivos temporales de sistema y editores
+.vscode/
+.idea/
+*.log
+.DS_Store
