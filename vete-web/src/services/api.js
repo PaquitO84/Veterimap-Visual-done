@@ -91,7 +91,7 @@ const api = {
   }),
 
   // --- CITAS / RESERVAS ---
-  createAppointment: (data) => api.request('/appointments', {
+  createAppointment: (data) => api.request('/users/me/appointments', { // <-- Cambiado
     method: 'POST',
     body: JSON.stringify(data)
   }),

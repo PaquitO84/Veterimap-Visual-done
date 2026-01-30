@@ -88,6 +88,8 @@ func main() {
             r.Get("/profile", userHandler.GetProfile)
             r.Post("/profile", userHandler.UpdateProfile)
 
+
+
             // --- ESTA ES LA POSICIÓN CORRECTA ---
             // Ahora la URL final será: /api/users/me/professional-profile
             r.Route("/professional-profile", func(r chi.Router) {
@@ -99,10 +101,14 @@ func main() {
             r.Get("/pets", userHandler.GetMyPets)
             r.Post("/pets", userHandler.AddPet)
             r.Get("/pets/{petID}", userHandler.GetPetByID)
+			r.Get("/clients", userHandler.GetMyClients)
 
             // Citas
             r.Get("/appointments", userHandler.GetMyAppointments)
             r.Post("/appointments", userHandler.CreateAppointment)
+
+			r.Patch("/appointments/status", userHandler.UpdateStatus)     // Nueva: Confirmar/Rechazar
+			r.Patch("/appointments/reschedule", userHandler.Reschedule)
         })
 
         // 2. Grupo de Historial Médico

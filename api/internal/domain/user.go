@@ -75,7 +75,8 @@ type Appointment struct {
 	// Campos auxiliares (para que el frontend vea nombres y no solo IDs)
 	// Se llenan mediante un JOIN en el SQL
 	PetName          string `json:"pet_name,omitempty"`
-	ProfessionalName string `json:"professional_name,omitempty"`
+    OwnerName        string `json:"owner_name,omitempty"`
+    ProfessionalName string `json:"professional_name,omitempty"`
 }
 
 type MedicalHistory struct {
@@ -116,8 +117,14 @@ type UserRepository interface {
 	UpsertProfessionalProfile(ctx context.Context, p *ProfessionalEntity) error
 	GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*ProfessionalEntity, error)
 
+	GetAppointmentsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]Appointment, error)
+    UpdateAppointmentStatus(ctx context.Context, appID uuid.UUID, status string) error // Aprovechamos para añadir esta
+    RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time) error // Y esta
+
 	// NOTA: Si borraste UpsertOwnerAccount e IsSubscriptionActive del repositorio,
 	// NO pueden estar aquí. Si los necesitas en el futuro, habrá que implementarlos en el repo.
+	GetClientsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]User, error)
+    
 }
 
 type AuthService interface {

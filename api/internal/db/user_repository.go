@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 	"veterimap-api/internal/domain"
 
 	"github.com/google/uuid"
@@ -205,26 +206,35 @@ func (r *PostgresUserRepository) GetMyPets(ctx context.Context, ownerID uuid.UUI
 }
 
 // --- GESTIÓN CLÍNICA ---
-
 func (r *PostgresUserRepository) CreateAppointment(ctx context.Context, app *domain.Appointment) error {
-	if app.ID == uuid.Nil {
-		app.ID = uuid.New()
-	}
 	query := `
-        INSERT INTO appointments (id, professional_id, owner_id, pet_id, appointment_date, notes, status, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', NOW())`
+        INSERT INTO appointments (id, professional_id, owner_id, pet_id, appointment_date, status, notes, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+    `
+	// CAMBIO: r.db -> r.Conn
 	_, err := r.Conn.Exec(ctx, query,
-		app.ID, app.ProfessionalID, app.OwnerID, app.PetID, app.AppointmentDate, app.Notes)
+		app.ID,
+		app.ProfessionalID,
+		app.OwnerID,
+		app.PetID,
+		app.AppointmentDate,
+		app.Status,
+		app.Notes,
+	)
 	return err
 }
 
 // Asegúrate que este nombre coincida con lo que llama el handler en GetMyAppointments
 func (r *PostgresUserRepository) GetAppointmentsByUserID(ctx context.Context, userID string) ([]domain.Appointment, error) {
 	query := `
-        SELECT a.id, a.appointment_date, a.status, a.notes, p.name as pet_name, u.name as professional_name
+        SELECT 
+            a.id, a.professional_id, a.owner_id, a.pet_id, 
+            a.appointment_date, a.status, a.notes, a.created_at,
+            p.name as pet_name, 
+            pe.name as professional_name
         FROM appointments a
-        JOIN pets p ON a.pet_id = p.id
-        JOIN users u ON a.professional_id = u.id
+        INNER JOIN pets p ON a.pet_id = p.id
+        INNER JOIN professional_entities pe ON a.professional_id = pe.id
         WHERE a.owner_id = $1
         ORDER BY a.appointment_date ASC`
 
@@ -237,7 +247,12 @@ func (r *PostgresUserRepository) GetAppointmentsByUserID(ctx context.Context, us
 	var appointments []domain.Appointment
 	for rows.Next() {
 		var a domain.Appointment
-		if err := rows.Scan(&a.ID, &a.AppointmentDate, &a.Status, &a.Notes, &a.PetName, &a.ProfessionalName); err != nil {
+		err := rows.Scan(
+			&a.ID, &a.ProfessionalID, &a.OwnerID, &a.PetID,
+			&a.AppointmentDate, &a.Status, &a.Notes, &a.CreatedAt,
+			&a.PetName, &a.ProfessionalName,
+		)
+		if err != nil {
 			return nil, err
 		}
 		appointments = append(appointments, a)
@@ -349,4 +364,88 @@ func (r *PostgresUserRepository) GetProfessionalProfileByUserID(ctx context.Cont
 		return nil, err
 	}
 	return &p, nil
+}
+
+func (r *PostgresUserRepository) GetAppointmentsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]domain.Appointment, error) {
+	query := `
+        SELECT 
+            a.id, 
+            a.professional_id, -- AÑADIR ESTA
+            a.owner_id,        -- AÑADIR ESTA
+            a.pet_id,          -- AÑADIR ESTA
+            a.appointment_date, 
+            a.status, 
+            a.notes, 
+            p.name as pet_name, 
+            u.name as owner_name
+        FROM appointments a
+        INNER JOIN pets p ON a.pet_id = p.id
+        INNER JOIN users u ON a.owner_id = u.id
+        WHERE a.professional_id = $1
+        ORDER BY a.appointment_date ASC`
+
+	rows, err := r.Conn.Query(ctx, query, profID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var appointments []domain.Appointment
+	for rows.Next() {
+		var a domain.Appointment
+		err := rows.Scan(
+			&a.ID,
+			&a.ProfessionalID, // Escanear el ID profesional
+			&a.OwnerID,        // Escanear el ID del dueño
+			&a.PetID,          // Escanear el ID de la mascota
+			&a.AppointmentDate,
+			&a.Status,
+			&a.Notes,
+			&a.PetName,
+			&a.OwnerName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		appointments = append(appointments, a)
+	}
+	return appointments, nil
+}
+
+func (r *PostgresUserRepository) UpdateAppointmentStatus(ctx context.Context, appID uuid.UUID, status string) error {
+	query := `UPDATE appointments SET status = $1 WHERE id = $2`
+	_, err := r.Conn.Exec(ctx, query, status, appID)
+	return err
+}
+
+func (r *PostgresUserRepository) RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time) error {
+	// Al reagendar, solemos volver a poner el estado en PENDING para que el otro confirme
+	query := `UPDATE appointments SET appointment_date = $1, status = 'PENDING' WHERE id = $2`
+	_, err := r.Conn.Exec(ctx, query, newDate, appID)
+	return err
+}
+
+func (r *PostgresUserRepository) GetClientsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]domain.User, error) {
+	// Buscamos usuarios que tengan al menos una cita con este profesional
+	query := `
+        SELECT DISTINCT u.id, u.name, u.email, u.phone, u.city
+        FROM users u
+        INNER JOIN appointments a ON u.id = a.owner_id
+        WHERE a.professional_id = $1`
+
+	rows, err := r.Conn.Query(ctx, query, profID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var clients []domain.User
+	for rows.Next() {
+		var u domain.User
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.City); err != nil {
+			return nil, err
+		}
+		clients = append(clients, u)
+	}
+	return clients, nil
 }

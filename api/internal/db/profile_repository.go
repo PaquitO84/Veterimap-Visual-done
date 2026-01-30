@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"veterimap-api/internal/domain"
+
 	"github.com/google/uuid"
-	
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -48,7 +48,7 @@ func (r *PostgresProfileRepository) SearchProfiles(ctx context.Context, name, ci
 	}
 
 	// 2. QUERY DE DATOS
-	// Corregimos la extracción de latitude/longitude. 
+	// Corregimos la extracción de latitude/longitude.
 	// Al usar ->> extraemos texto, por lo que casteamos a NUMERIC para el Scan a float64.
 	dataQuery := `
         SELECT 
@@ -81,16 +81,16 @@ func (r *PostgresProfileRepository) SearchProfiles(ctx context.Context, name, ci
 
 	for rows.Next() {
 		var p domain.ProfileSummary
-		
+
 		err := rows.Scan(
-			&p.ID, 
-			&p.Name, 
-			&p.ProfileType, 
-			&p.Rating, 
-			&p.ReviewCount, 
-			&p.City, 
+			&p.ID,
+			&p.Name,
+			&p.ProfileType,
+			&p.Rating,
+			&p.ReviewCount,
+			&p.City,
 			&p.FullAddress,
-			&p.Latitude, 
+			&p.Latitude,
 			&p.Longitude,
 		)
 		if err != nil {
@@ -112,18 +112,18 @@ func (r *PostgresProfileRepository) GetProfileDetail(ctx context.Context, id str
 	var d domain.ProfileDetail
 
 	err := r.Conn.QueryRow(ctx, query, id).Scan(
-		&d.ID,            // Se mapea a uuid.UUID en el struct
-		&d.UserID,        // Se mapea a *uuid.UUID en el struct
-		&d.EntityType,    // string
-		&d.Status,        // string
-		&d.Name,          // string
-		&d.Slug,          // string
-		&d.ProfileData,   // pgx detecta el destino Struct y la columna JSONB automáticamente
-		&d.Rating,        // float64
-		&d.ReviewCount,   // int
-		&d.IsActive,      // bool
-		&d.CreatedAt,     // time.Time
-		&d.UpdatedAt,     // time.Time
+		&d.ID,          // Se mapea a uuid.UUID en el struct
+		&d.UserID,      // Se mapea a *uuid.UUID en el struct
+		&d.EntityType,  // string
+		&d.Status,      // string
+		&d.Name,        // string
+		&d.Slug,        // string
+		&d.ProfileData, // pgx detecta el destino Struct y la columna JSONB automáticamente
+		&d.Rating,      // float64
+		&d.ReviewCount, // int
+		&d.IsActive,    // bool
+		&d.CreatedAt,   // time.Time
+		&d.UpdatedAt,   // time.Time
 	)
 
 	if err != nil {
@@ -171,17 +171,17 @@ func (r *PostgresProfileRepository) UpsertProfessionalProfile(ctx context.Contex
 }
 
 func (r *PostgresProfileRepository) GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*domain.ProfessionalEntity, error) {
-    query := `SELECT id, user_id, entity_type, status, name, slug, profile_data, rating, review_count, is_active, created_at, updated_at 
+	query := `SELECT id, user_id, entity_type, status, name, slug, profile_data, rating, review_count, is_active, created_at, updated_at 
               FROM professional_entities WHERE user_id = $1`
 
-    var d domain.ProfessionalEntity
-    err := r.Conn.QueryRow(ctx, query, userID).Scan(
-        &d.ID, &d.UserID, &d.EntityType, &d.Status, &d.Name, &d.Slug, 
-        &d.ProfileData, &d.Rating, &d.ReviewCount, &d.IsActive, &d.CreatedAt, &d.UpdatedAt,
-    )
+	var d domain.ProfessionalEntity
+	err := r.Conn.QueryRow(ctx, query, userID).Scan(
+		&d.ID, &d.UserID, &d.EntityType, &d.Status, &d.Name, &d.Slug,
+		&d.ProfileData, &d.Rating, &d.ReviewCount, &d.IsActive, &d.CreatedAt, &d.UpdatedAt,
+	)
 
-    if err != nil {
-        return nil, err
-    }
-    return &d, nil
+	if err != nil {
+		return nil, err
+	}
+	return &d, nil
 }

@@ -6,6 +6,7 @@ import (
 	"veterimap-api/internal/auth"
 	"veterimap-api/internal/domain"
 	"veterimap-api/internal/pkg/responses"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -89,19 +90,45 @@ func (h *UserHandler) GetMyPets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) CreateAppointment(w http.ResponseWriter, r *http.Request) {
-	var app domain.Appointment
-	if err := json.NewDecoder(r.Body).Decode(&app); err != nil {
-		responses.Error(w, http.StatusBadRequest, "Datos de cita inválidos")
-		return
-	}
+    // 1. Obtener el ID del cliente desde el Token (Ya lo tienes bien)
+    claims, ok := auth.GetClaims(r.Context())
+    if !ok {
+        responses.Error(w, http.StatusUnauthorized, "No autorizado")
+        return
+    }
+    ownerID, _ := uuid.Parse(claims.UserID)
 
-	if err := h.UserRepo.CreateAppointment(r.Context(), &app); err != nil {
-		responses.Error(w, http.StatusInternalServerError, "Error al crear la cita")
-		return
-	}
+    var app domain.Appointment
+    if err := json.NewDecoder(r.Body).Decode(&app); err != nil {
+        responses.Error(w, http.StatusBadRequest, "Datos de cita inválidos")
+        return
+    }
 
-	responses.JSON(w, http.StatusCreated, app)
+    // --- EL BLINDAJE DEFINITIVO ---
+    // El frontend envía el ID del profesional (que puede ser el del Usuario David).
+    // Nosotros vamos a asegurar que 'ProfessionalID' sea el de la Entidad Profesional.
+    
+    // Buscamos si el ID recibido ya es una entidad o si es un usuario que tiene una entidad
+    prof, err := h.ProfileRepo.GetProfessionalProfileByUserID(r.Context(), app.ProfessionalID)
+    if err == nil {
+        // Si encontramos la entidad, usamos su ID real
+        app.ProfessionalID = prof.ID
+    }
+    // Si no se encuentra, asumimos que el ID enviado ya era el ID de la Entidad.
+    // ------------------------------
+
+    app.ID = uuid.New()
+    app.OwnerID = ownerID
+    app.Status = "PENDING"
+
+    if err := h.UserRepo.CreateAppointment(r.Context(), &app); err != nil {
+        responses.Error(w, http.StatusInternalServerError, "Error al guardar la cita en DB")
+        return
+    }
+
+    responses.JSON(w, http.StatusCreated, app)
 }
+
 func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name       string                 `json:"name"`
@@ -165,19 +192,37 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetMyAppointments(w http.ResponseWriter, r *http.Request) {
-	claims, ok := auth.GetClaims(r.Context())
-	if !ok {
-		responses.Error(w, http.StatusUnauthorized, "No autorizado")
-		return
-	}
+    claims, ok := auth.GetClaims(r.Context())
+    if !ok {
+        responses.Error(w, http.StatusUnauthorized, "No autorizado")
+        return
+    }
 
-	appointments, err := h.UserRepo.GetAppointmentsByUserID(r.Context(), claims.UserID)
-	if err != nil {
-		responses.Error(w, http.StatusInternalServerError, "Error al obtener citas")
-		return
-	}
+    userID, _ := uuid.Parse(claims.UserID)
+    var appointments []domain.Appointment
+    var err error
 
-	responses.JSON(w, http.StatusOK, appointments)
+    // Validamos el ROL del usuario que hace la petición
+    if claims.Role == string(domain.RoleProfessional) {
+        // 1. Primero necesitamos el ID de la entidad profesional (el UUID de David profesional)
+        prof, errProf := h.ProfileRepo.GetProfessionalProfileByUserID(r.Context(), userID)
+        if errProf != nil {
+            responses.Error(w, http.StatusInternalServerError, "No se encontró perfil profesional")
+            return
+        }
+        // 2. Usamos tu nueva función del repositorio
+        appointments, err = h.UserRepo.GetAppointmentsByProfessionalID(r.Context(), prof.ID)
+    } else {
+        // Si es un dueño normal, usamos la que ya tenías
+        appointments, err = h.UserRepo.GetAppointmentsByUserID(r.Context(), claims.UserID)
+    }
+
+    if err != nil {
+        responses.Error(w, http.StatusInternalServerError, "Error al obtener citas")
+        return
+    }
+
+    responses.JSON(w, http.StatusOK, appointments)
 }
 
 func (h *UserHandler) GetPetByID(w http.ResponseWriter, r *http.Request) {
@@ -227,4 +272,60 @@ func (h *UserHandler) AddMedicalHistory(w http.ResponseWriter, r *http.Request) 
 	}
 
 	responses.JSON(w, http.StatusCreated, entry)
+}
+
+func (h *UserHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		AppointmentID uuid.UUID `json:"appointment_id"`
+		Status        string    `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		responses.Error(w, http.StatusBadRequest, "Datos inválidos")
+		return
+	}
+
+	if err := h.UserRepo.UpdateAppointmentStatus(r.Context(), input.AppointmentID, input.Status); err != nil {
+		responses.Error(w, http.StatusInternalServerError, "Error al actualizar estado")
+		return
+	}
+	responses.JSON(w, http.StatusOK, map[string]string{"message": "Estado actualizado"})
+}
+
+// --- REAGENDAR CITA ---
+func (h *UserHandler) Reschedule(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		AppointmentID uuid.UUID `json:"appointment_id"`
+		NewDate       time.Time `json:"new_date"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		responses.Error(w, http.StatusBadRequest, "Datos de reagendación inválidos")
+		return
+	}
+
+	if err := h.UserRepo.RescheduleAppointment(r.Context(), input.AppointmentID, input.NewDate); err != nil {
+		responses.Error(w, http.StatusInternalServerError, "Error al reagendar")
+		return
+	}
+	responses.JSON(w, http.StatusOK, map[string]string{"message": "Propuesta de cambio enviada"})
+}
+
+func (h *UserHandler) GetMyClients(w http.ResponseWriter, r *http.Request) {
+    claims, _ := auth.GetClaims(r.Context())
+    userID, _ := uuid.Parse(claims.UserID)
+
+    // Necesitamos el ID profesional para buscar sus clientes
+    prof, err := h.ProfileRepo.GetProfessionalProfileByUserID(r.Context(), userID)
+    if err != nil {
+        responses.Error(w, http.StatusNotFound, "Perfil profesional no encontrado")
+        return
+    }
+
+    // Aquí llamarías a una función de tu repo que haga un DISTINCT de dueños en tus citas
+    clients, err := h.UserRepo.GetClientsByProfessionalID(r.Context(), prof.ID)
+    if err != nil {
+        responses.Error(w, http.StatusInternalServerError, "Error al obtener clientes")
+        return
+    }
+
+    responses.JSON(w, http.StatusOK, clients)
 }

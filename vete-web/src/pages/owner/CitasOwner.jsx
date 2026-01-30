@@ -13,27 +13,26 @@ const CitasOwner = () => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        // El endpoint unificado según nuestro router de Go
-        const response = await api.request('/users/me/appointments');
-        
-        // Verificamos si la respuesta viene envuelta en un objeto 'data' 
-        // según nuestro paquete 'responses' de Go
-        setAppointments(response.data || response || []);
+        const response = await api.getMyAppointments();
+        // Desempaquetado robusto: revisa si viene en .data o es el array directo
+        const data = response?.data || (Array.isArray(response) ? response : []);
+        setAppointments(data);
       } catch (err) {
         console.error("Error al cargar citas:", err);
+        setAppointments([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchAppointments();
-  }, []);
+
+    fetchAppointments(); // !!! IMPORTANTE: Llamar a la función
+  }, []); // [] asegura que solo se ejecute al montar el componente
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  // Helper para renderizar los estados según la nomenclatura del Backend (PENDING, CONFIRMED, etc)
   const renderStatusBadge = (status) => {
     const configs = {
       'CONFIRMED': { color: 'bg-green-100 text-green-700', text: 'Confirmada' },
@@ -41,9 +40,7 @@ const CitasOwner = () => {
       'COMPLETED': { color: 'bg-blue-100 text-blue-700', text: 'Completada' },
       'CANCELLED': { color: 'bg-red-100 text-red-700', text: 'Cancelada' }
     };
-
     const config = configs[status] || configs['PENDING'];
-
     return (
       <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${config.color}`}>
         {config.text}
