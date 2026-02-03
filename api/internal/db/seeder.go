@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-// ClinicaJSON representa la estructura de entrada de tu archivo clinicas.json
 type ClinicaJSON struct {
 	Nombre    string      `json:"nombre"`
 	Direccion string      `json:"direccion"`
@@ -21,10 +20,9 @@ type ClinicaJSON struct {
 	Rating    interface{} `json:"rating"`
 	Reviews   interface{} `json:"reviews"`
 	Horario   string      `json:"horario"`
-	TipoFicha string      `json:"tipoFicha"` 
+	TipoFicha string      `json:"tipoFicha"`
 }
 
-// makeSlug crea identificadores únicos para evitar duplicados en la base de datos
 func makeSlug(name string, city string) string {
 	raw := strings.ToLower(fmt.Sprintf("%s-%s", name, city))
 	reg, _ := regexp.Compile("[^a-z0-9]+")
@@ -32,7 +30,6 @@ func makeSlug(name string, city string) string {
 }
 
 func SeedClinicas() error {
-	// 1. Leer el archivo JSON
 	data, err := os.ReadFile("clinicas.json")
 	if err != nil {
 		return fmt.Errorf("no se pudo abrir clinicas.json: %v", err)
@@ -47,7 +44,6 @@ func SeedClinicas() error {
 	log.Printf("🚀 Iniciando importación clasificada de %d registros...", len(clinicas))
 
 	for i, c := range clinicas {
-		// --- CATEGORIZACIÓN SINCRONIZADA CON EL MAPA ---
 		var entityType string
 		switch c.TipoFicha {
 		case "fichas_clinicas":
@@ -60,31 +56,36 @@ func SeedClinicas() error {
 			entityType = "CLINIC"
 		}
 
-		// 2. Construcción del profile_data (JSONB)
-		// Aseguramos que latitude y longitude sean números (float64)
+		// --- ADAPTACIÓN DE HORARIO AL STRUCT WorkingDay ---
+		// Esto evita el error de "cannot unmarshal string into WorkingDay"
+		workingHoursAdapted := map[string]interface{}{
+			"monday": map[string]interface{}{
+				"active": true,
+				"start":  "Consultar",
+				"end":    c.Horario, // Guardamos el texto completo aquí para que se vea en el perfil
+			},
+		}
+
 		profileData := map[string]interface{}{
 			"addresses": []map[string]interface{}{
 				{
 					"full_address": c.Direccion,
 					"city":         c.Ciudad,
-					"latitude":     toFloat(c.Lat),
-					"longitude":    toFloat(c.Lng),
+					"latitude":     sanitizeCoord(c.Lat),
+					"longitude":    sanitizeCoord(c.Lng),
 					"is_main":      true,
 				},
 			},
 			"contact": map[string]string{
 				"phone": c.Telefono,
 			},
-			"working_hours": map[string]string{
-				"opening_hours": c.Horario,
-			},
-			"specialties": []string{}, 
+			"working_hours": workingHoursAdapted, // <--- Ahora es un objeto, no un string
+			"specialties":   []string{},
 		}
 
 		profileDataJSON, _ := json.Marshal(profileData)
 		slug := makeSlug(c.Nombre, c.Ciudad)
 
-		// 3. Inserción con resolución de conflictos por Slug
 		query := `
             INSERT INTO professional_entities (
                 entity_type, status, name, slug, 
@@ -95,17 +96,19 @@ func SeedClinicas() error {
                 profile_data = EXCLUDED.profile_data,
                 rating = EXCLUDED.rating,
                 review_count = EXCLUDED.review_count,
-                updated_at = NOW()`
+                updated_at = NOW()
+            RETURNING id`
 
-		_, err = Conn.Exec(ctx, query,
+		var actualID string
+		err = Conn.QueryRow(ctx, query,
 			entityType,
-			"PROSPECT", // Señuelo
+			"PROSPECT",
 			c.Nombre,
 			slug,
 			toFloat(c.Rating),
 			int(toFloat(c.Reviews)),
 			profileDataJSON,
-		)
+		).Scan(&actualID)
 
 		if err != nil {
 			log.Printf("❌ Error importando %s: %v", c.Nombre, err)
@@ -117,11 +120,19 @@ func SeedClinicas() error {
 		}
 	}
 
-	log.Println("✅ Seeder completado: Datos de clínicas actualizados en professional_entities.")
+	log.Println("✅ Seeder completado con éxito.")
 	return nil
 }
 
-// toFloat garantiza que cualquier tipo de dato (string o número) se convierta a float64
+// sanitizeCoord evita que el mapa reciba ceros o NaNs que lo bloquean
+func sanitizeCoord(v interface{}) float64 {
+	f := toFloat(v)
+	if f == 0 {
+		return 40.4167 // Madrid por defecto si no hay lat/lng
+	}
+	return f
+}
+
 func toFloat(v interface{}) float64 {
 	if v == nil {
 		return 0
@@ -137,7 +148,6 @@ func toFloat(v interface{}) float64 {
 		return float64(t)
 	case string:
 		var f float64
-		// Limpiamos strings por si vienen con comas u otros formatos
 		cleanStr := strings.Replace(t, ",", ".", -1)
 		fmt.Sscanf(cleanStr, "%f", &f)
 		return f

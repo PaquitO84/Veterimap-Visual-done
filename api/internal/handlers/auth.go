@@ -173,7 +173,7 @@ func (h *AuthHandler) SaveProfessionalProfile(w http.ResponseWriter, r *http.Req
 	}
 
 	// Forzamos el UserID del token para evitar suplantaciones
-	req.UserID = uid
+	req.UserID = &uid
 
 	// 4. Ejecución en Base de Datos con Log de error detallado
 	if err := h.Service.UpsertProfessionalProfile(r.Context(), uid, &req); err != nil {

@@ -26,15 +26,34 @@ const Login = () => {
       
       // 3. Pedir los datos frescos del perfil
       const profileRes = await api.getOwnProfile();
-      const profile = profileRes.user || profileRes;
-      const hasProfile = profileRes.has_profile; 
+      // Extraemos el rol de forma segura
+      const userRole = (profileRes.user?.role || profileRes.role)?.toUpperCase();
 
-      // REDIRECCIÓN INTELIGENTE UNIFICADA
-      if (profile.role === 'PROFESSIONAL') {
-          navigate(hasProfile ? '/backoffice-vet' : '/formulario-vet');
+      // --- REDIRECCIÓN INTELIGENTE ---
+      if (userRole === 'PROFESSIONAL') {
+          try {
+              const profData = await api.getProfileDetails(); 
+              if (profData && profData.name) {
+                  navigate('/backoffice-vet');
+              } else {
+                  navigate('/formulario-vet');
+              }
+          } catch {
+              // Si falla (404), es que no tiene perfil creado aún
+              navigate('/formulario-vet');
+          }
       } 
-      else if (profile.role === 'PET_OWNER') {
-          navigate(hasProfile ? '/backoffice-owner' : '/formulario-owner');
+      else if (userRole === 'PET_OWNER') {
+          try {
+              const pets = await api.getMyPets();
+              if (pets && pets.length > 0) {
+                  navigate('/backoffice-owner');
+              } else {
+                  navigate('/formulario-owner');
+              }
+          } catch {
+              navigate('/formulario-owner');
+          }
       } 
       else {
           navigate('/mapa');

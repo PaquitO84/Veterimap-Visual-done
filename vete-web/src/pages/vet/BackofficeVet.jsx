@@ -44,13 +44,15 @@ const BackofficeVet = () => {
 }, [user]);
 
   const getStatusStyle = (status) => {
-    switch(status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-700';
-      case 'CONFIRMED': return 'bg-green-100 text-green-700';
-      case 'REALIZADA': return 'bg-purple-100 text-purple-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  switch(status) {
+    case 'PENDING': return 'bg-yellow-100 text-yellow-700';
+    case 'RESCHEDULED': return 'bg-blue-100 text-blue-700';
+    case 'CONFIRMED': return 'bg-green-100 text-green-700';
+    case 'COMPLETED': return 'bg-purple-100 text-purple-700'; // Actualizado de 'REALIZADA'
+    case 'CANCELLED': return 'bg-red-100 text-red-700';
+    default: return 'bg-gray-100 text-gray-700';
+  }
+};
 
   return (
     <div className="bg-gray-50 flex min-h-screen font-sans">
@@ -97,7 +99,7 @@ const BackofficeVet = () => {
     <p className="text-gray-500 font-medium italic">
       {loading 
         ? 'Sincronizando datos...' 
-        : `Bienvenido, ${profile?.name || user?.name || 'Veterinario'}`
+        : `${profile?.name || user?.name || 'Veterinario'}`
       }
     </p>
   </div>

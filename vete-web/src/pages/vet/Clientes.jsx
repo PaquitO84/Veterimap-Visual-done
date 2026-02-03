@@ -43,22 +43,24 @@ const Clientes = () => {
   }, [fetchClients]);
 
   const openExpediente = async (owner) => {
-    setSelectedOwner(owner);
-    setCurrentPet(null);
-    setHistory([]);
-    setErrorMsg(null);
-    setIsModalOpen(true);
+  setSelectedOwner(owner);
+  setCurrentPet(null);
+  setHistory([]);
+  setErrorMsg(null);
+  setIsModalOpen(true);
 
-    try {
-      // Usamos el ID del dueño para traer sus mascotas
-      const data = await api.request(`/pets/owner/${owner.owner_id}`);
-      setPets(data?.data || data || []);
-    } catch (error) {
-      console.error("Error cargando mascotas:", error);
-      setErrorMsg("No se pudieron cargar las mascotas del cliente.");
-    }
-  };
+  try {
+    // Usamos la ruta completa que acabamos de registrar en main.go
+    // El owner.id es el que confirmamos en tu "Vista previa de Red"
+    const data = await api.request(`/users/me/pets/owner/${owner.id}`);
+    setPets(Array.isArray(data) ? data : (data?.data || []));
+  } catch (error) {
+    console.error("Error cargando mascotas:", error);
+    setErrorMsg("No se pudieron cargar las mascotas del cliente.");
+  }
+};
 
+  
   const selectPet = async (pet) => {
     setCurrentPet(pet);
     setHistory([]);
@@ -83,9 +85,9 @@ const Clientes = () => {
     setErrorMsg(null);
   };
 
-  const filteredClients = clients.filter(c =>
-    c.owner_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+ const filteredClients = clients.filter(c =>
+  (c.name || c.owner_name)?.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
   useEffect(() => {
   const loadDoctorData = async () => {
@@ -146,87 +148,89 @@ const Clientes = () => {
 
       {/* Contenido Principal */}
       <main className="flex-1 p-6 md:p-8">
-       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-  <div>
-    <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Gestión de Clientes</h1>
-    <p className="text-gray-500 font-medium italic">Historiales clínicos y expedientes</p>
-  </div>
-  
-  <div className="flex items-center space-x-4">
-    <div className="text-right hidden sm:block">
-      {/* CAMBIO CLAVE: Ahora usamos profile?.name que viene de la DB */}
-      <p className="font-bold text-gray-800 leading-none">
-        {profile?.name || 'Cargando...'}
-      </p>
-      <span className="text-[10px] text-blue-600 font-black uppercase tracking-tighter">
-        Panel Veterimap Pro
-      </span>
-    </div>
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Gestión de Clientes</h1>
+            <p className="text-gray-500 font-medium italic">Historiales clínicos y expedientes</p>
+          </div>
 
-    {/* Avatar circular con inicial o logo */}
-    <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-lg border-2 border-white shadow-sm overflow-hidden">
-      {profile?.logo_url ? (
-        <img src={profile.logo_url} className="w-full h-full object-cover" alt="Perfil" />
-      ) : (
-        // Si no hay logo, mostramos la inicial del nombre real
-        profile?.name?.charAt(0) || 'V'
-      )}
-    </div>
-  </div>
-</header>
+          <div className="flex items-center space-x-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-gray-500 font-medium italic">
+                {loading 
+                  ? 'Sincronizando datos...' 
+                  : `${profile?.name || user?.name || 'Veterinario'}`
+                }
+              </p>
+              <span className="text-[10px] text-blue-600 font-black uppercase tracking-tighter">
+                Panel Veterimap Pro
+              </span>
+            </div>
+
+            <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-lg border-2 border-white shadow-sm overflow-hidden">
+              {profile?.logo_url ? (
+                <img src={profile.logo_url} className="w-full h-full object-cover" alt="Perfil" />
+              ) : (
+                (profile?.name || user?.name || 'V').charAt(0).toUpperCase()
+              )}
+            </div>
+          </div>
+        </header>
 
         {/* Buscador Modernizado */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 flex items-center gap-4">
-            <div className="bg-slate-50 flex-1 flex items-center px-4 py-1 rounded-xl">
-                <i className="fas fa-search text-slate-400 mr-3"></i>
-                <input
-                    type="text"
-                    placeholder="Buscar por nombre del dueño o cliente..."
-                    className="bg-transparent border-none w-full p-2 outline-none text-slate-700 font-medium"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
-            {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase">Limpiar</button>
-            )}
+          <div className="bg-slate-50 flex-1 flex items-center px-4 py-1 rounded-xl">
+            <i className="fas fa-search text-slate-400 mr-3"></i>
+            <input
+              type="text"
+              placeholder="Buscar por nombre del dueño o cliente..."
+              className="bg-transparent border-none w-full p-2 outline-none text-slate-700 font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase">Limpiar</button>
+          )}
         </div>
 
         {/* Listado de Clientes */}
-          {errorMsg && (
+        {errorMsg && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 font-medium rounded-r-xl animate-pulse">
             <i className="fas fa-exclamation-circle mr-2"></i>
             {errorMsg}
           </div>
         )}
-          <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center">
             <h3 className="font-bold text-slate-800">Clientes vinculados</h3>
             <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter">
-                {filteredClients.length} Registros
+              {filteredClients.length} Registros
             </span>
           </div>
 
           <div className="divide-y divide-gray-100">
             {loading ? (
               <div className="p-20 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               </div>
             ) : filteredClients.length === 0 ? (
               <div className="p-20 text-center text-slate-400 italic">
                 {searchTerm ? "No se encontraron coincidencias" : "Todavía no tienes clientes registrados"}
               </div>
             ) : (
+              // CORRECCIÓN AQUÍ: Se eliminaron las llaves { } que envolvían al map
               filteredClients.map((owner) => (
-                <div key={owner.owner_id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-blue-50/20 transition group">
+                <div key={owner.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-blue-50/20 transition group">
                   <div className="flex items-center space-x-5">
                     <div className="bg-slate-100 group-hover:bg-white w-12 h-12 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition shadow-sm">
                       <i className="fas fa-user-circle text-2xl"></i>
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-800 text-lg leading-tight">{owner.owner_name}</h4>
+                      <h4 className="font-bold text-slate-800 text-lg leading-tight">{owner.name}</h4>
                       <p className="text-xs font-bold text-blue-500 uppercase mt-1 tracking-tight">
-                        <i className="fas fa-paw mr-1"></i> {owner.pet_count || 0} Mascotas asociadas
+                        <i className="fas fa-location-arrow mr-1"></i> {owner.city || 'Ciudad no especificada'}
                       </p>
                     </div>
                   </div>
@@ -242,6 +246,7 @@ const Clientes = () => {
           </div>
         </div>
       </main>
+      
 
       {/* Modal de Expediente - Diseño Mejorado */}
       {isModalOpen && (
@@ -297,14 +302,25 @@ const Clientes = () => {
                         <h4 className="font-black text-slate-800 text-lg flex items-center gap-2">
                           <i className="fas fa-history text-blue-500 text-sm"></i> Resumen de Visitas
                         </h4>
-                        <button 
-                            onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-                            className="text-[10px] font-black text-blue-600 hover:underline tracking-widest uppercase"
+                        <button
+                          onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
+                          className="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition"
                         >
-                            Ver Todo →
+                          Ir a Gestión Médica Completa
                         </button>
                     </div>
-
+                    <div className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
+    <div>
+        <p className="text-blue-800 font-black text-sm">Consulta en curso</p>
+        <p className="text-blue-600 text-[11px] font-bold tracking-tighter uppercase italic">Registra el diagnóstico y tratamiento actual</p>
+    </div>
+    <button
+        onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
+        className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform active:scale-95 flex items-center gap-2"
+    >
+        <i className="fas fa-stethoscope"></i> Atender Paciente
+    </button>
+</div>
                     {history.length > 0 ? (
                       <div className="space-y-4">
                         {history.slice(0, 3).map((entry, idx) => (
@@ -334,13 +350,20 @@ const Clientes = () => {
                     ) : (
                       <div className="text-center py-20 bg-slate-50 rounded-3xl">
                         <p className="text-slate-400 text-sm italic mb-6">No hay registros médicos para esta mascota.</p>
-                        <button
-                          onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-                          className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-xs"
-                        >
-                          + INICIAR HISTORIAL
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          if (currentPet?.id) {
+                            // Navegamos a la ruta de gestión médica
+                            navigate(`/historial-clinico/${currentPet.id}`); 
+                          } else {
+                            alert("Por favor, selecciona una mascota en la columna de la izquierda.");
+                          }
+                        }}
+                        className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-xs"
+                      >
+                        + INICIAR HISTORIAL
+                      </button>
+                                              </div>
                     )}
                   </div>
                 ) : (

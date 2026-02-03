@@ -43,23 +43,26 @@ func JWTMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-// CORS configura las cabeceras para permitir peticiones desde el Frontend (ej: localhost:5173)
+
+
 func CORS() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// En desarrollo permitimos todo, en producción deberías poner tu dominio
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            w.Header().Set("Access-Control-Allow-Origin", "*")
+            
+            // CAMBIO AQUÍ: Añadimos PATCH a la lista
+            w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+            
+            w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
+            if r.Method == "OPTIONS" {
+                w.WriteHeader(http.StatusOK)
+                return
+            }
 
-			next.ServeHTTP(w, r)
-		})
-	}
+            next.ServeHTTP(w, r)
+        })
+    }
 }
 
 // CheckSubscription bloquea el acceso si el profesional no tiene suscripción activa

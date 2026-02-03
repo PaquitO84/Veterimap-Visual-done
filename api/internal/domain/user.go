@@ -22,22 +22,22 @@ const (
 )
 
 type User struct {
-    ID                 uuid.UUID `json:"id"`
-    Email              string    `json:"email"`
-    Password           string    `json:"-"`
-    Role               Role      `json:"role"`
-    IsVerified         bool      `json:"is_verified"`
-    VerificationCode   string    `json:"verification_code"`
-    SubscriptionStatus string    `json:"subscription_status"`
-    CreatedAt          time.Time `json:"created_at"`
-    UpdatedAt          time.Time `json:"updated_at"`
-    
-    // Usamos punteros (*) porque estos campos pueden ser NULL en la BD al registrarse
-    Name               *string   `json:"name"`
-    Phone              *string   `json:"phone"`
-    City               *string   `json:"city"`
-    Address            *string   `json:"address"`
-    PostalCode         *string   `json:"postal_code"`
+	ID                 uuid.UUID `json:"id"`
+	Email              string    `json:"email"`
+	Password           string    `json:"-"`
+	Role               Role      `json:"role"`
+	IsVerified         bool      `json:"is_verified"`
+	VerificationCode   string    `json:"verification_code"`
+	SubscriptionStatus string    `json:"subscription_status"`
+	CreatedAt          time.Time `json:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at"`
+
+	// Usamos punteros (*) porque estos campos pueden ser NULL en la BD al registrarse
+	Name       *string `json:"name"`
+	Phone      *string `json:"phone"`
+	City       *string `json:"city"`
+	Address    *string `json:"address"`
+	PostalCode *string `json:"postal_code"`
 }
 
 type OwnerAccount struct {
@@ -75,15 +75,15 @@ type Appointment struct {
 	// Campos auxiliares (para que el frontend vea nombres y no solo IDs)
 	// Se llenan mediante un JOIN en el SQL
 	PetName          string `json:"pet_name,omitempty"`
-    OwnerName        string `json:"owner_name,omitempty"`
-    ProfessionalName string `json:"professional_name,omitempty"`
+	OwnerName        string `json:"owner_name,omitempty"`
+	ProfessionalName string `json:"professional_name,omitempty"`
 }
 
 type MedicalHistory struct {
 	ID             uuid.UUID `json:"id"`
 	PetID          uuid.UUID `json:"pet_id"`
 	ProfessionalID uuid.UUID `json:"professional_id"`
-	AppointmentID  uuid.UUID `json:"appointment_id"`
+	AppointmentID  *uuid.UUID `json:"appointment_id,omitempty"`
 	Diagnosis      string    `json:"diagnosis"`
 	Treatment      string    `json:"treatment"`
 	InternalNotes  string    `json:"internal_notes"`
@@ -118,13 +118,13 @@ type UserRepository interface {
 	GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*ProfessionalEntity, error)
 
 	GetAppointmentsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]Appointment, error)
-    UpdateAppointmentStatus(ctx context.Context, appID uuid.UUID, status string) error // Aprovechamos para añadir esta
-    RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time) error // Y esta
+	UpdateAppointmentStatus(ctx context.Context, appID uuid.UUID, status string) error // Aprovechamos para añadir esta
+	RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time, notes string) error
 
 	// NOTA: Si borraste UpsertOwnerAccount e IsSubscriptionActive del repositorio,
 	// NO pueden estar aquí. Si los necesitas en el futuro, habrá que implementarlos en el repo.
 	GetClientsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]User, error)
-    
+	GetPetsByOwnerID(ctx context.Context, ownerID uuid.UUID) ([]Pet, error)
 }
 
 type AuthService interface {
@@ -134,5 +134,4 @@ type AuthService interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
 	UpsertProfessionalProfile(ctx context.Context, userID uuid.UUID, p *ProfessionalEntity) error
 	GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*ProfessionalEntity, error)
-	
 }

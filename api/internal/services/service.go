@@ -100,24 +100,26 @@ func (s *authService) Verify(ctx context.Context, email, code string) error {
 // internal/services/service.go
 
 func (s *authService) UpsertProfessionalProfile(ctx context.Context, userID uuid.UUID, p *domain.ProfessionalEntity) error {
-    p.UserID = userID
+	p.UserID = &userID
 
-    // Corregimos: "ACTIVE" no existe en tu DB. Usamos "VERIFIED" o "CLAIMED"
-    if p.Status == "" || p.Status == "ACTIVE" {
-        p.Status = "VERIFIED" 
-    }
-    
-    p.IsActive = true
+	// Corregimos: "ACTIVE" no existe en tu DB. Usamos "VERIFIED" o "CLAIMED"
+	if p.Status == "" || p.Status == "ACTIVE" {
+		p.Status = "VERIFIED"
+	}
 
-    // Generar Slug basado en el nombre
-    if p.Name != "" {
-        p.Slug = strings.ToLower(strings.ReplaceAll(p.Name, " ", "-"))
-    }
+	p.IsActive = true
 
-    return s.repo.UpsertProfessionalProfile(ctx, p)
+	// Generar Slug basado en el nombre de forma segura para el puntero
+	if p.Name != "" {
+		generatedSlug := strings.ToLower(strings.ReplaceAll(p.Name, " ", "-"))
+		p.Slug = &generatedSlug
+	}
+
+	// Asegúrate de que esta línea tenga exactamente estos paréntesis:
+	return s.repo.UpsertProfessionalProfile(ctx, p)
 }
 
 func (s *authService) GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*domain.ProfessionalEntity, error) {
-    // Este método debe ir al repositorio de perfiles
-    return s.repo.GetProfessionalProfileByUserID(ctx, userID)
+	// Este método debe ir al repositorio de perfiles
+	return s.repo.GetProfessionalProfileByUserID(ctx, userID)
 }

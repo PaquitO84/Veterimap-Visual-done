@@ -18,13 +18,15 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const PanToVet = ({ center }) => {
     const map = useMap();
     useEffect(() => {
-        // Validación robusta: que existan, que no sean 0 y que sean números (no NaN)
-        if (center && 
-            typeof center[0] === 'number' && !isNaN(center[0]) && 
-            typeof center[1] === 'number' && !isNaN(center[1]) &&
-            center[0] !== 0) {
-            
-            map.flyTo(center, 15, { duration: 1.5 });
+        const isValidCoordinate = (coord) => {
+            return typeof coord === 'number' && !isNaN(coord) && coord !== 0;
+        };
+        if (center && isValidCoordinate(center[0]) && isValidCoordinate(center[1])) {
+            try {
+                map.flyTo(center, 15, { duration: 1.5 });
+            } catch (err) {
+                console.error("Error al mover el mapa:", err);
+            }
         }
     }, [center, map]);
     return null;
@@ -33,9 +35,7 @@ const PanToVet = ({ center }) => {
 const RecenterMap = ({ points }) => {
     const map = useMap();
     useEffect(() => {
-        // Solo calcular si hay puntos y tienen coordenadas válidas
         const validPoints = points.filter(p => p.lat && p.lng && !isNaN(p.lat) && !isNaN(p.lng));
-        
         if (validPoints.length > 0) {
             const bounds = L.latLngBounds(validPoints.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -47,9 +47,12 @@ const RecenterMap = ({ points }) => {
 const Mapa = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [vets, setVets] = useState([]);
+    
+    // ESTADOS INICIALIZADOS DESDE LA URL PARA PERSISTENCIA
     const [city, setCity] = useState(searchParams.get('city') || '');
-    const [service, setService] = useState('CLINIC');
-    const [specialty, setSpecialty] = useState('');
+    const [service, setService] = useState(searchParams.get('type') || 'CLINIC');
+    const [specialty, setSpecialty] = useState(searchParams.get('specialty') || '');
+    
     const [sortBy, setSortBy] = useState('rating-desc');
     const [ratingFilter, setRatingFilter] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -57,10 +60,8 @@ const Mapa = () => {
     const [selectedVet, setSelectedVet] = useState(null);
     const listRefs = useRef({});
 
-    const fetchVets = useCallback(async (forcedCity) => {
-        const targetCity = typeof forcedCity === 'string' ? forcedCity : city;
+    const fetchVets = useCallback(async (targetCity) => {
         if (!targetCity) return;
-
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -70,9 +71,7 @@ const Mapa = () => {
             if (service === 'INDIVIDUAL' && specialty) {
                 params.append('specialty', specialty);
             }
-
             const response = await api.request(`profiles/map?${params.toString()}`);
-
             if (response && response.results) {
                 const mapped = response.results.map(v => ({
                     id: v.id,
@@ -84,12 +83,7 @@ const Mapa = () => {
                     reviews: v.review_count,
                     tipoFicha: v.entity_type
                 }));
-
-                const validVets = mapped.filter(v => 
-        !isNaN(v.lat) && v.lat !== 0 && 
-        !isNaN(v.lng) && v.lng !== 0
-    );
-    setVets(validVets);
+                setVets(mapped.filter(v => !isNaN(v.lat) && v.lat !== 0));
             }
         } catch (err) {
             console.error("Error en fetchVets:", err);
@@ -97,12 +91,27 @@ const Mapa = () => {
         } finally {
             setLoading(false);
         }
-    }, [city, service, specialty]);
+    }, [service, specialty]);
 
+    // EFECTO PARA DISPARAR BÚSQUEDA AL VOLVER ATRÁS
     useEffect(() => {
         const cityParam = searchParams.get('city');
-        if (cityParam) fetchVets(cityParam);
+        if (cityParam) {
+            setCity(cityParam);
+            setService(searchParams.get('type') || 'CLINIC');
+            setSpecialty(searchParams.get('specialty') || '');
+            fetchVets(cityParam);
+        }
     }, [searchParams, fetchVets]);
+
+    const handleSearchClick = () => {
+        setSearchParams({ 
+            city, 
+            type: service, 
+            specialty: service === 'INDIVIDUAL' ? specialty : '' 
+        });
+        fetchVets(city);
+    };
 
     const processedVets = [...vets]
         .filter(v => v.rating >= parseFloat(ratingFilter))
@@ -112,16 +121,10 @@ const Mapa = () => {
             return 0;
         });
 
-    const handleSearchClick = () => {
-        setSearchParams({ city });
-        fetchVets(city);
-    };
-
     useEffect(() => {
-    setTimeout(() => {
-        window.dispatchEvent(new Event('resize'));
-    }, 200);
-}, [viewMode]);
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+    }, [viewMode]);
+
 
     return (
         <div className="h-screen w-full bg-slate-100 flex flex-col overflow-hidden font-sans text-slate-900">

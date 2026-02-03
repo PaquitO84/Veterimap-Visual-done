@@ -261,11 +261,21 @@ func (r *PostgresUserRepository) GetAppointmentsByUserID(ctx context.Context, us
 }
 
 func (r *PostgresUserRepository) AddMedicalHistory(ctx context.Context, h *domain.MedicalHistory) error {
-	query := `
+    // Usamos NULLIF para que si el ID de la cita es el valor por defecto (ceros), 
+    // se guarde como NULL en la base de datos y no rompa la restricción.
+    query := `
         INSERT INTO medical_histories (pet_id, professional_id, appointment_id, diagnosis, treatment, internal_notes) 
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`
-	return r.Conn.QueryRow(ctx, query, h.PetID, h.ProfessionalID, h.AppointmentID, h.Diagnosis, h.Treatment, h.InternalNotes).
-		Scan(&h.ID, &h.CreatedAt)
+        VALUES ($1, $2, NULLIF($3, '00000000-0000-0000-0000-000000000000'::uuid), $4, $5, $6) 
+        RETURNING id, created_at`
+        
+    return r.Conn.QueryRow(ctx, query, 
+        h.PetID, 
+        h.ProfessionalID, 
+        h.AppointmentID, 
+        h.Diagnosis, 
+        h.Treatment, 
+        h.InternalNotes,
+    ).Scan(&h.ID, &h.CreatedAt)
 }
 
 // IsSubscriptionActive verifica si el usuario tiene una suscripción válida.
@@ -418,34 +428,63 @@ func (r *PostgresUserRepository) UpdateAppointmentStatus(ctx context.Context, ap
 	return err
 }
 
-func (r *PostgresUserRepository) RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time) error {
-	// Al reagendar, solemos volver a poner el estado en PENDING para que el otro confirme
-	query := `UPDATE appointments SET appointment_date = $1, status = 'PENDING' WHERE id = $2`
-	_, err := r.Conn.Exec(ctx, query, newDate, appID)
-	return err
+func (r *PostgresUserRepository) RescheduleAppointment(ctx context.Context, appID uuid.UUID, newDate time.Time, notes string) error {
+    // Cambiamos el estado a 'RESCHEDULED' para que el Front del dueño sepa que debe mostrar botones de Aceptar/Anular
+    // Y guardamos la nota explicativa del veterinario
+    query := `
+        UPDATE appointments 
+        SET appointment_date = $1, 
+            status = 'RESCHEDULED', 
+            notes = $2 
+        WHERE id = $3`
+        
+    _, err := r.Conn.Exec(ctx, query, newDate, notes, appID)
+    return err
 }
 
 func (r *PostgresUserRepository) GetClientsByProfessionalID(ctx context.Context, profID uuid.UUID) ([]domain.User, error) {
-	// Buscamos usuarios que tengan al menos una cita con este profesional
-	query := `
+    // Mejoramos la query: El cliente existe si la cita NO está 'CANCELLED' ni es 'PENDING'
+    // Esto incluye CONFIRMED, COMPLETED y RESCHEDULED
+    query := `
         SELECT DISTINCT u.id, u.name, u.email, u.phone, u.city
         FROM users u
         INNER JOIN appointments a ON u.id = a.owner_id
-        WHERE a.professional_id = $1`
+        WHERE a.professional_id = $1 
+        AND a.status IN ('CONFIRMED', 'COMPLETED', 'RESCHEDULED', 'NOSHOW')
+        ORDER BY u.name ASC`
 
-	rows, err := r.Conn.Query(ctx, query, profID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    rows, err := r.Conn.Query(ctx, query, profID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var clients []domain.User
-	for rows.Next() {
-		var u domain.User
-		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.City); err != nil {
-			return nil, err
-		}
-		clients = append(clients, u)
-	}
-	return clients, nil
+    var clients []domain.User
+    for rows.Next() {
+        var u domain.User
+        if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.City); err != nil {
+            return nil, err
+        }
+        clients = append(clients, u)
+    }
+    return clients, nil
+}
+
+func (r *PostgresUserRepository) GetPetsByOwnerID(ctx context.Context, ownerID uuid.UUID) ([]domain.Pet, error) {
+    query := `SELECT id, name, species, breed, gender, birth_date, owner_id FROM pets WHERE owner_id = $1`
+    rows, err := r.Conn.Query(ctx, query, ownerID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var pets []domain.Pet
+    for rows.Next() {
+        var p domain.Pet
+        if err := rows.Scan(&p.ID, &p.Name, &p.Species, &p.Breed, &p.Gender, &p.BirthDate, &p.OwnerID); err != nil {
+            return nil, err
+        }
+        pets = append(pets, p)
+    }
+    return pets, nil
 }

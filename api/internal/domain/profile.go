@@ -9,11 +9,11 @@ import (
 
 type ProfessionalEntity struct {
 	ID          uuid.UUID   `json:"id"`
-	UserID      uuid.UUID   `json:"user_id"`
+	UserID      *uuid.UUID  `json:"user_id"`
 	EntityType  string      `json:"entity_type"`
 	Status      string      `json:"status"`
 	Name        string      `json:"name"`
-	Slug        string      `json:"slug"`
+	Slug        *string     `json:"slug"`
 	ProfileData ProfileData `json:"profile_data"` // Mapea al JSONB
 	Rating      float64     `json:"rating"`
 	ReviewCount int         `json:"review_count"`

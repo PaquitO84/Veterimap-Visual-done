@@ -81,7 +81,7 @@ func (h *ProfileHandler) SearchMap(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetDetail: Ficha completa de una veterinaria
+// GetDetail: Ficha completa de una veterinaria con diagnóstico
 func (h *ProfileHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
@@ -89,11 +89,20 @@ func (h *ProfileHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Registro de entrada
+	log.Printf("🔎 INTENTO DE CARGA: Buscando ID [%s] en la base de datos...", id)
+
 	detail, err := h.Repo.GetProfileDetail(r.Context(), id)
 	if err != nil {
+		// ESTA LÍNEA ES LA MÁS IMPORTANTE:
+		// Nos dirá si es "no rows in result set" (no existe)
+		// o un error de "Scan" (problema de tipos de datos/nulos).
+		log.Printf("❌ ERROR TÉCNICO DETECTADO: %v", err)
+
 		responses.Error(w, http.StatusNotFound, "Perfil no encontrado")
 		return
 	}
 
+	log.Printf("✅ ÉXITO: Perfil [%s] cargado correctamente", detail.Name)
 	responses.JSON(w, http.StatusOK, detail)
 }

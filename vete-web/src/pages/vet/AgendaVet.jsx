@@ -19,6 +19,7 @@ const AgendaVet = () => {
   const [selectedAppId, setSelectedAppId] = useState(null);
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [rescheduleNote, setRescheduleNote] = useState('');
 
   // 1. CARGA DE CITAS
   const loadAppointments = useCallback(async () => {
@@ -29,12 +30,13 @@ const AgendaVet = () => {
 
       // Prioridad: PENDING primero, luego el resto por fecha
       const statusPriority = {
-        'PENDING': 1,
-        'CONFIRMED': 2,
-        'COMPLETED': 3,
-        'CANCELLED': 4,
-        'NOSHOW': 5
-      };
+  'PENDING': 1,
+  'RESCHEDULED': 2, // Prioridad alta porque es una gestión activa
+  'CONFIRMED': 3,
+  'COMPLETED': 4,
+  'CANCELLED': 5,
+  'NOSHOW': 6
+};
 
       const sorted = data.sort((a, b) => {
         if (statusPriority[a.status] !== statusPriority[b.status]) {
@@ -85,43 +87,53 @@ const AgendaVet = () => {
   };
 
   const handleReschedule = async () => {
-    try {
-      const combinedDateTime = `${newDate}T${newTime}:00Z`;
-      await api.request('/users/me/appointments/reschedule', {
-        method: 'PATCH',
-        body: JSON.stringify({ appointment_id: selectedAppId, new_date: combinedDateTime })
-      });
-      alert('Propuesta de cambio enviada correctamente');
-      setIsModalOpen(false);
-      loadAppointments();
-    } catch {
-      alert('Error al reagendar la cita');
-    }
-  };
+  try {
+    const combinedDateTime = `${newDate}T${newTime}:00Z`;
+    await api.request('/users/me/appointments/reschedule', {
+      method: 'PATCH',
+      body: JSON.stringify({ 
+        appointment_id: selectedAppId, 
+        new_date: combinedDateTime,
+        notes: rescheduleNote // Enviamos la nota capturada
+      })
+    });
+    
+    alert('Propuesta de cambio enviada correctamente');
+    setIsModalOpen(false);
+    setRescheduleNote(''); // Limpiamos la nota para la siguiente vez
+    loadAppointments();
+  } catch (err) {
+    console.error("Error al reagendar:", err);
+    alert('Error al reagendar la cita');
+  }
+}
 
   // Helper para colores de etiquetas
   const getStatusClass = (status) => {
-    const classes = {
-      'PENDING': 'bg-yellow-100 text-yellow-700',
-      'CONFIRMED': 'bg-green-100 text-green-700',
-      'CANCELLED': 'bg-red-100 text-red-700',
-      'COMPLETED': 'bg-purple-100 text-purple-700',
-      'NOSHOW': 'bg-slate-200 text-slate-600',
-    };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+  const classes = {
+    'PENDING': 'bg-yellow-100 text-yellow-700',
+    'CONFIRMED': 'bg-green-100 text-green-700',
+    'CANCELLED': 'bg-red-100 text-red-700',
+    'COMPLETED': 'bg-purple-100 text-purple-700',
+    'NOSHOW': 'bg-slate-200 text-slate-600',
+    'RESCHEDULED': 'bg-blue-100 text-blue-700', // Color para reagendación
   };
+  return classes[status] || 'bg-gray-100 text-gray-700';
+};
 
   // --- LÓGICA DE FILTRADO PARA LA LISTA ---
   const filteredAppointments = appointments.filter(app => {
-    // Si filtramos por un estado que NO es 'ALL', ignoramos la fecha para ver histórico
-    if (filterStatus !== 'ALL') {
-      return app.status === filterStatus;
+    const appDate = new Date(app.appointment_date).toISOString().split('T')[0];
+
+    if (filterStatus === 'ALL') {
+      return app.status !== 'PENDING'; // Muestra el historial completo menos las pendientes
     }
     
-    // Si el filtro es 'ALL', filtramos por la fecha seleccionada en el calendario
-    // Pero excluimos las PENDING (porque esas van en la sección superior fija)
-    const appDate = new Date(app.appointment_date).toISOString().split('T')[0];
-    return appDate === selectedDate && app.status !== 'PENDING';
+    if (filterStatus === 'DATE') {
+      return appDate === selectedDate && app.status !== 'PENDING'; // Solo ese día
+    }
+
+    return app.status === filterStatus; // Filtro por estado (Confirmadas, Canceladas...)
   });
 
   // Sección superior fija de Pendientes (siempre visibles)
@@ -197,14 +209,22 @@ const AgendaVet = () => {
 
           <div className="flex items-center space-x-4">
             <div className="text-right hidden sm:block">
-              <p className="font-bold text-gray-800 leading-none">
-                {profile?.name ? `Dr. ${profile.name}` : 'Cargando...'}
-              </p>
+              <p className="text-gray-500 font-medium italic">
+      {loading 
+        ? 'Sincronizando datos...' 
+        : `${profile?.name || user?.name || 'Veterinario'}`
+      }
+    </p>
               <span className="text-[10px] text-blue-600 font-black uppercase tracking-tighter">Sesión Pro</span>
             </div>
             <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-lg border-2 border-white shadow-sm overflow-hidden">
-              {profile?.logo_url ? <img src={profile.logo_url} className="w-full h-full object-cover" alt="Perfil" /> : profile?.name?.charAt(0) || 'V'}
-            </div>
+      {profile?.logo_url ? (
+        <img src={profile.logo_url} className="w-full h-full object-cover" alt="Perfil" />
+      ) : (
+        // Usamos la inicial del nombre detectado
+        (profile?.name || user?.name || 'V').charAt(0).toUpperCase()
+      )}
+    </div>
           </div>
         </header>
 
@@ -233,13 +253,31 @@ const AgendaVet = () => {
         </div>
 
         {/* SECCIÓN 3: AGENDA Y CALENDARIO */}
-        <div className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center justify-between gap-4 transition-opacity ${filterStatus !== 'ALL' ? 'opacity-50 grayscale pointer-events-none' : 'opacity-100'}`}>
-            <div className="flex items-center gap-3">
-                <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><i className="fas fa-calendar-day"></i></div>
-                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="border-none bg-gray-50 p-2 rounded-lg focus:ring-2 ring-blue-500 outline-none font-bold text-gray-700" />
-            </div>
-            <button onClick={loadAppointments} className="bg-slate-800 text-white px-6 py-2 rounded-xl hover:bg-slate-700 transition font-bold text-sm uppercase tracking-tighter">Sincronizar</button>
+<div className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center justify-between gap-4 transition-all duration-300 ${filterStatus !== 'ALL' ? 'opacity-40 grayscale scale-[0.98]' : 'opacity-100'}`}>
+    <div className="flex items-center gap-3">
+        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><i className="fas fa-calendar-day"></i></div>
+        <div className="flex flex-col">
+          <span className="text-[9px] font-black text-slate-400 uppercase">Filtrar por día</span>
+          <input 
+            type="date" 
+            value={selectedDate} 
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              setFilterStatus('DATE'); // Creamos un estado virtual para filtrar por día
+            }} 
+            className="border-none bg-transparent p-0 outline-none font-bold text-gray-700" 
+          />
         </div>
+    </div>
+    {filterStatus !== 'ALL' && (
+      <button 
+        onClick={() => setFilterStatus('ALL')} 
+        className="text-blue-600 font-bold text-xs hover:underline"
+      >
+        Limpiar filtros y ver todo
+      </button>
+    )}
+</div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center">
@@ -287,6 +325,18 @@ const AgendaVet = () => {
                 <label className="block text-xs font-black text-gray-400 uppercase mb-1 ml-1">Nueva Hora</label>
                 <input type="time" className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-2 ring-blue-500 font-bold" value={newTime} onChange={(e)=>setNewTime(e.target.value)} />
               </div>
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase mb-1 ml-1">
+                  Motivo del cambio (Se enviará al cliente)
+                </label>
+                <textarea 
+                  className="w-full bg-gray-50 border-none rounded-2xl p-4 outline-none focus:ring-2 ring-blue-500 font-medium text-sm resize-none"
+                  rows="3"
+                  placeholder="Ej: Lo siento, me ha surgido una urgencia quirúrgica..."
+                  value={rescheduleNote}
+                  onChange={(e) => setRescheduleNote(e.target.value)}
+                />
+              </div>
               <div className="flex gap-3 pt-4">
                 <button onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition">Cancelar</button>
                 <button onClick={handleReschedule} className="flex-[2] px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition">Enviar Propuesta</button>
@@ -327,6 +377,13 @@ const AppointmentCard = ({ app, getStatusClass, updateStatus, setSelectedAppId, 
       <button onClick={() => updateStatus(app.id, 'CONFIRMED')} className="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-emerald-600 transition shadow-sm uppercase">Confirmar</button>
       <button onClick={() => { setSelectedAppId(app.id); setIsModalOpen(true); }} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-blue-600 transition shadow-sm uppercase">Reagendar</button>
       <button onClick={() => updateStatus(app.id, 'CANCELLED')} className="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black hover:bg-red-50 transition uppercase">Rechazar</button>
+    </div>
+    ) : app.status === 'RESCHEDULED' ? (
+    <div className="flex flex-col items-end">
+      <span className={`${getStatusClass('RESCHEDULED')} px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest`}>
+        Propuesta Enviada
+      </span>
+      <p className="text-[9px] text-slate-400 mt-1 italic">Esperando confirmación del cliente</p>
     </div>
   ) : (
     <div className="flex items-center gap-4">

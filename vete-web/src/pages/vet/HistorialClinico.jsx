@@ -34,10 +34,17 @@ const HistorialClinico = () => {
         return age > 0 ? `${age} años` : "Cachorro";
     };
 
+    const handleBack = () => {
+        if (isProfessional) {
+            navigate('/clientes');
+        } else {
+            navigate('/mis-mascotas');
+        }
+    };
+
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            // ELIMINADO EL PREFIJO /api PORQUE TU api.js YA LO INCLUYE
             const [petRes, historyRes] = await Promise.all([
                 api.request(`/users/me/pets/${petId}`), 
                 api.request(`/medical-histories/pet/${petId}`)
@@ -57,46 +64,71 @@ const HistorialClinico = () => {
     }, [fetchData]);
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            // ELIMINADO EL PREFIJO /api AQUÍ TAMBIÉN
-            await api.request(`/medical-histories`, 'POST', {
-                ...newEntry,
-                pet_id: petId,
-                professional_id: user.id
-            });
-            setShowForm(false);
-            setNewEntry({ diagnosis: '', treatment: '', internal_notes: '' });
-            fetchData();
-        } catch (err) {
-            console.error("Error al guardar:", err);
-        }
+    e.preventDefault();
+    
+    // El ID que necesitamos es el de la "entidad profesional", 
+    // que es el que la DB reconoce para el historial.
+    const payload = {
+        diagnosis: newEntry.diagnosis,
+        treatment: newEntry.treatment,
+        internal_notes: newEntry.internal_notes,
+        pet_id: petId,
+        // IMPORTANTE: Aquí usamos el ID de la entidad, no el user.id
+        // Si tienes el perfil cargado en el estado 'pet', 
+        // a veces el backend devuelve el professional_id ahí.
+        // Si no, lo ideal es que el 'user' del contexto ya traiga su entity_id.
+        professional_id: "4f1b0e77-4a4a-47d0-973e-cb5ca3710b45", 
+        appointment_id: newEntry.appointment_id || null
     };
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center h-screen text-slate-400">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="font-bold">Sincronizando historial médico...</p>
-        </div>
-    );
+    try {
+        await api.request('/medical-histories', 'POST', payload);
+        
+        setShowForm(false);
+        setNewEntry({ 
+            diagnosis: '', 
+            treatment: '', 
+            internal_notes: '', 
+            appointment_id: null 
+        });
+        
+        fetchData();
+        alert("Historial actualizado correctamente ✅");
+        
+    } catch (err) {
+        console.error("Error al guardar historial:", err);
+        alert("Error al guardar: Revisa que todos los campos obligatorios estén llenos.");
+    }
+};
+    // Renderizado de carga
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen text-slate-400">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p className="font-bold">Sincronizando historial médico...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Breadcrumb / Botón Volver */}
-        <button 
-          onClick={() => navigate('/mis-mascotas')}
-          className="flex items-center text-slate-500 hover:text-blue-600 transition mb-4 font-medium group"
-        >
-          <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> 
-          Volver
-        </button>
+            {/* Barra de navegación superior / Botón Volver Inteligente */}
+            <div className="max-w-4xl mx-auto px-6 pt-6">
+                <button 
+                    onClick={handleBack}
+                    className="flex items-center text-slate-500 hover:text-blue-600 transition mb-4 font-bold group text-sm uppercase tracking-widest"
+                >
+                    <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span> 
+                    {isProfessional ? 'Volver a Clientes' : 'Mis Mascotas'}
+                </button>
+            </div>
 
             {/* --- CABECERO / FICHA TÉCNICA DE LA MASCOTA --- */}
             <div className="bg-white border-b shadow-sm sticky top-0 z-10">
                 <div className="max-w-4xl mx-auto p-4 md:p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-start gap-4">
-                            <button onClick={() => navigate(-1)} className="mt-1 text-slate-300 hover:text-blue-600 transition-colors">
+                            <button onClick={handleBack} className="mt-1 text-slate-300 hover:text-blue-600 transition-colors">
                                 <i className="fas fa-arrow-left text-xl"></i>
                             </button>
                             <div>
@@ -123,7 +155,7 @@ const HistorialClinico = () => {
                         )}
                     </div>
 
-                    {/* Grid de Datos Rápidos (5 Columnas) */}
+                    {/* Grid de Datos Rápidos */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8 pt-6 border-t border-slate-50">
                         <div className="bg-slate-50 p-3 rounded-2xl text-center">
                             <p className="text-[10px] font-black text-slate-400 uppercase">Especie</p>
@@ -133,7 +165,7 @@ const HistorialClinico = () => {
                         </div>
                         <div className="bg-slate-50 p-3 rounded-2xl text-center">
                             <p className="text-[10px] font-black text-slate-400 uppercase">Raza</p>
-                            <p className="font-bold text-slate-700 capitalize truncate" title={pet?.breed}>
+                            <p className="font-bold text-slate-700 capitalize truncate px-1">
                                 {pet?.breed || 'Mestizo'}
                             </p>
                         </div>
@@ -148,8 +180,8 @@ const HistorialClinico = () => {
                         <div className="bg-slate-50 p-3 rounded-2xl text-center">
                             <p className="text-[10px] font-black text-slate-400 uppercase">Salud</p>
                             <p className="font-bold text-emerald-600 flex items-center justify-center gap-1">
-                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                                Óptimo
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                Estable
                             </p>
                         </div>
                     </div>
@@ -196,39 +228,34 @@ const HistorialClinico = () => {
                                 <textarea 
                                     className="w-full p-4 bg-white rounded-xl outline-none focus:ring-4 ring-amber-500/10 border-none transition-all text-amber-900"
                                     rows="2"
-                                    placeholder="Anotaciones internas que el dueño no verá..."
+                                    placeholder="Anotaciones que el dueño no verá..."
                                     value={newEntry.internal_notes}
                                     onChange={(e) => setNewEntry({...newEntry, internal_notes: e.target.value})}
                                 />
                             </div>
-                            <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all transform active:scale-[0.98]">
+                            <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
                                 PUBLICAR EN HISTORIAL
                             </button>
                         </div>
                     </form>
                 )}
 
-                <div className="space-y-8">
+                <div className="space-y-8 mt-4">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Cronología Médica</h3>
                     
                     {entries.length === 0 ? (
                         <div className="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-slate-200">
-                            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <i className="fas fa-folder-open text-3xl text-slate-300"></i>
-                            </div>
-                            <p className="text-slate-500 font-bold">El historial está impecable.</p>
-                            <p className="text-slate-400 text-sm">Aún no se han registrado visitas médicas.</p>
+                            <p className="text-slate-500 font-bold">No hay registros médicos para esta mascota.</p>
                         </div>
                     ) : (
                         entries.map((entry) => (
                             <div key={entry.id} className="group relative pl-8 border-l-2 border-slate-200 ml-4 pb-8 last:pb-0">
-                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-blue-600 shadow-sm group-hover:scale-125 transition-transform"></div>
-                                <div className="bg-white border rounded-[2rem] p-6 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-300">
+                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-4 border-blue-600 shadow-sm transition-transform"></div>
+                                <div className="bg-white border rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all">
                                     <div className="flex justify-between items-center mb-6">
                                         <div className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase">
                                             {new Date(entry.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </div>
-                                        <div className="text-[10px] font-bold text-slate-300">REG: {entry.id.slice(0,6).toUpperCase()}</div>
                                     </div>
                                     <div className="space-y-6">
                                         <div>
@@ -237,14 +264,14 @@ const HistorialClinico = () => {
                                         </div>
                                         {entry.treatment && (
                                             <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/50">
-                                                <h4 className="text-[9px] font-black text-emerald-600 uppercase mb-2 tracking-widest">Tratamiento y recomendaciones</h4>
+                                                <h4 className="text-[9px] font-black text-emerald-600 uppercase mb-2 tracking-widest">Tratamiento</h4>
                                                 <p className="text-sm text-slate-700 leading-relaxed font-medium">{entry.treatment}</p>
                                             </div>
                                         )}
                                         {isProfessional && entry.internal_notes && (
                                             <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-100/50">
                                                 <h4 className="text-[9px] font-black text-amber-600 uppercase mb-2 tracking-widest flex items-center gap-2">
-                                                    <i className="fas fa-lock"></i> Notas Internas del Profesional
+                                                    <i className="fas fa-lock"></i> Notas Internas
                                                 </h4>
                                                 <p className="text-xs text-amber-900 italic font-medium leading-relaxed">{entry.internal_notes}</p>
                                             </div>

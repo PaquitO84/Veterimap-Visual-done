@@ -6,7 +6,7 @@ import L from 'leaflet';
 import api from "../../services/api";
 import { useAuth } from "../../context/useAuth";
 
-// Configuración de iconos de Leaflet para evitar que desaparezcan en React
+// Configuración de iconos de Leaflet
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -27,77 +27,79 @@ const ProfileVet = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // 1. GESTIÓN DE RESERVA DE CITAS
+  // --- 1. NAVEGACIÓN INTELIGENTE "VOLVER" ---
+  const handleBackNavigation = () => {
+    if (!user) {
+      // Usuario no registrado: vuelve al mapa con los filtros previos intactos
+      navigate(-1);
+      return;
+    }
+
+    // Normalizamos el rol a mayúsculas para comparar con seguridad
+    const userRole = (user.role)?.toUpperCase();
+
+    if (userRole === 'PROFESSIONAL') {
+      navigate('/mapa');
+    } else if (userRole === 'PET_OWNER') {
+      navigate('/mapa');
+    } else {
+      // Fallback por si el rol no coincide exactamente
+      navigate(-1);
+    }
+  };
+
+  // --- 2. GESTIÓN DE RESERVA DE CITAS ---
   const handleBookingClick = () => {
     if (!user) {
       navigate('/login', { state: { from: `/book-appointment/${id}` } });
-    } else if (user.role === 'PET_OWNER') {
+    } else if (user.role?.toUpperCase() === 'PET_OWNER') {
       navigate(`/book-appointment/${id}`);
     } else {
       alert("Solo las cuentas de Propietarios pueden reservar citas.");
     }
   };
 
-  // 2. CARGA DE DATOS DESDE EL BACKEND
+  // --- 3. CARGA DE DATOS ---
   useEffect(() => {
-  const fetchProfile = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      // Obtenemos los datos del profesional por su ID
-      const data = await api.getProfileDetails(id);
-      
-      // 'pd' es el objeto JSONB profile_data que vimos en DBeaver
-      const pd = data.profile_data;
+    const fetchProfile = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const data = await api.getProfileDetails(id);
+        const pd = data.profile_data;
 
-      const processed = {
-  ...data,
-  // 1. SOBRE NOSOTROS (bio)
-  description: pd?.bio || "Sin descripción disponible.",
-  
-  // 2. LOGO
-  logo: pd?.logo_url || null,
+        const processed = {
+          ...data,
+          description: pd?.bio || "Sin descripción disponible.",
+          logo: pd?.logo_url || null,
+          main_address: pd?.addresses?.find(a => a.is_main)?.full_address || pd?.addresses?.[0]?.full_address || "Consultar dirección",
+          city: pd?.addresses?.[0]?.city || "Ciudad no especificada",
+          lat: parseFloat(pd?.addresses?.[0]?.latitude) || 40.4167,
+          lng: parseFloat(pd?.addresses?.[0]?.longitude) || -3.7037,
+          services_list: pd?.specialties || [],
+          rates_list: (pd?.pricing?.tarifas && pd.pricing.tarifas.length > 0)
+            ? pd.pricing.tarifas
+            : (pd?.specialization?.detailed_services || []),
+          insurances: pd?.insurance_partners?.accepts 
+            ? pd.insurance_partners.companies 
+            : "No se han especificado seguros",
+          license_number: pd?.license_number || "No disponible",
+          phone: pd?.contact?.phone || "No disponible",
+          email: pd?.contact?.email || data.email
+        };
 
-  // 3. UBICACIÓN (Mantenemos lat/lng para el mapa)
-  main_address: pd?.addresses?.find(a => a.is_main)?.full_address || pd?.addresses?.[0]?.full_address || "Consultar dirección",
-  city: pd?.addresses?.[0]?.city || "Ciudad no especificada",
-  lat: parseFloat(pd?.addresses?.[0]?.latitude) || 40.4167,
-  lng: parseFloat(pd?.addresses?.[0]?.longitude) || -3.7037,
+        setProfile(processed);
+      } catch (err) {
+        console.error("Error cargando perfil:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 4. ESPECIALIDADES
-  services_list: pd?.specialties || [],
+    fetchProfile();
+  }, [id]);
 
-  // 5. TARIFAS Y SERVICIOS (Prioridad a pricing, fallback a detailed_services)
-  rates_list: (pd?.pricing?.tarifas && pd.pricing.tarifas.length > 0)
-    ? pd.pricing.tarifas
-    : (pd?.specialization?.detailed_services || []),
-
-  // 6. SEGUROS (Leemos del nuevo objeto insurance_partners)
-  insurances: pd?.insurance_partners?.accepts 
-    ? pd.insurance_partners.companies 
-    : "No se han especificado seguros",
-
-  // 7. Nº COLEGIADO (Añadido para el Sidebar)
-  license_number: pd?.license_number || "No disponible",
-
-  // 8. CONTACTO
-  phone: pd?.contact?.phone || "No disponible",
-  email: pd?.contact?.email || data.email
-};
-
-setProfile(processed);
-    } catch (err) {
-      console.error("Error cargando perfil:", err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (id) fetchProfile();
-}, [id]);
-
-  // 3. ESTADOS DE INTERFAZ (CARGA Y ERROR)
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -113,31 +115,28 @@ setProfile(processed);
           <i className="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
           <h2 className="text-2xl font-black text-slate-800 mb-2">Perfil no encontrado</h2>
           <p className="text-slate-500 mb-6 italic">El ID solicitado no existe o no tiene una cuenta profesional activa.</p>
-          <Link to="/backoffice-vet" className="bg-[#1cabb0] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#168a8e] transition block">
-            Volver al Panel
-          </Link>
+          <button onClick={handleBackNavigation} className="bg-[#1cabb0] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#168a8e] transition block w-full">
+            {user ? 'Volver al Mapa' : 'Volver al Mapa'}
+          </button>
         </div>
       </div>
     );
   }
 
-  // 4. RENDERIZADO DEL PERFIL
   return (
     <div className="bg-[#f5f8f9] min-h-screen pb-20 font-sans text-slate-900">
       <div className="max-w-5xl mx-auto p-5">
         
-        {/* BOTÓN VOLVER (Condicional si el usuario está logueado) */}
-        {user && (
-          <button 
-            onClick={() => navigate('/backoffice-vet')} 
-            className="mb-8 flex items-center text-slate-500 hover:text-[#1cabb0] font-bold transition-all group"
-          >
-            <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 mr-3 group-hover:bg-[#e0f7f9] transition-colors">
-              <i className="fas fa-arrow-left"></i>
-            </div>
-            VOLVER AL PANEL
-          </button>
-        )}
+        {/* BOTÓN VOLVER DINÁMICO */}
+        <button 
+          onClick={handleBackNavigation} 
+          className="mb-8 flex items-center text-slate-500 hover:text-[#1cabb0] font-bold transition-all group"
+        >
+          <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 mr-3 group-hover:bg-[#e0f7f9] transition-colors">
+            <i className="fas fa-arrow-left"></i>
+          </div>
+          {user ? 'VOLVER AL PANEL' : 'VOLVER AL MAPA'}
+        </button>
 
         {/* Tarjeta Superior de Identidad */}
         <header className="bg-white rounded-[2rem] border border-gray-200 shadow-sm p-8 mb-8">

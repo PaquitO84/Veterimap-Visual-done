@@ -77,46 +77,49 @@ func main() {
 	})
 
 	// --- RUTAS PRIVADAS (Requieren JWT) ---
-    r.Group(func(r chi.Router) {
-        r.Use(auth.JWTMiddleware())
+	r.Group(func(r chi.Router) {
+		r.Use(auth.JWTMiddleware())
 
-        r.Get("/api/me", authHandler.MeHandler)
+		r.Get("/api/me", authHandler.MeHandler)
 
-        // 1. Grupo de Usuario (TODO lo que cuelga de /api/users/me)
-        r.Route("/api/users/me", func(r chi.Router) {
-            // Perfil de Dueño
-            r.Get("/profile", userHandler.GetProfile)
-            r.Post("/profile", userHandler.UpdateProfile)
+		// 1. Grupo de Usuario (TODO lo que cuelga de /api/users/me)
+		r.Route("/api/users/me", func(r chi.Router) {
+			// Perfil de Dueño
+			r.Get("/profile", userHandler.GetProfile)
+			r.Post("/profile", userHandler.UpdateProfile)
 
+			// --- ESTA ES LA POSICIÓN CORRECTA ---
+			// Ahora la URL final será: /api/users/me/professional-profile
+			r.Route("/professional-profile", func(r chi.Router) {
+				r.Get("/", authHandler.GetProfessionalProfile)
+				r.Post("/", authHandler.SaveProfessionalProfile)
+			})
 
-
-            // --- ESTA ES LA POSICIÓN CORRECTA ---
-            // Ahora la URL final será: /api/users/me/professional-profile
-            r.Route("/professional-profile", func(r chi.Router) {
-                r.Get("/", authHandler.GetProfessionalProfile) 
-                r.Post("/", authHandler.SaveProfessionalProfile)
-            })
-
-            // Mascotas
-            r.Get("/pets", userHandler.GetMyPets)
-            r.Post("/pets", userHandler.AddPet)
-            r.Get("/pets/{petID}", userHandler.GetPetByID)
+			// Mascotas
+			r.Get("/pets", userHandler.GetMyPets)
+			r.Post("/pets", userHandler.AddPet)
+			r.Get("/pets/{petID}", userHandler.GetPetByID)
 			r.Get("/clients", userHandler.GetMyClients)
 
-            // Citas
-            r.Get("/appointments", userHandler.GetMyAppointments)
-            r.Post("/appointments", userHandler.CreateAppointment)
+			// Citas
+			r.Get("/appointments", userHandler.GetMyAppointments)
+			r.Post("/appointments", userHandler.CreateAppointment)
 
-			r.Patch("/appointments/status", userHandler.UpdateStatus)     // Nueva: Confirmar/Rechazar
+			r.Patch("/appointments/status", userHandler.UpdateStatus) // Nueva: Confirmar/Rechazar
 			r.Patch("/appointments/reschedule", userHandler.Reschedule)
-        })
 
-        // 2. Grupo de Historial Médico
-        r.Route("/api/medical-histories", func(r chi.Router) {
-            r.Get("/pet/{petID}", userHandler.GetMedicalHistory)
-            r.Post("/", userHandler.AddMedicalHistory)
-        })
-    })
+			r.Get("/pets/owner/{ownerID}", userHandler.GetPetsByOwner)
+		})
+
+		// 2. Grupo de Historial Médico
+		r.Route("/api/medical-histories", func(r chi.Router) {
+			// Esta ruta permite que David cargue el pasado clínico de la mascota
+			r.Get("/pet/{petID}", userHandler.GetMedicalHistory)
+
+			// Esta ruta permite que David cree una nueva entrada (POST)
+			r.Post("/", userHandler.AddMedicalHistory)
+		})
+	})
 
 	// 8. Arrancar el Servidor
 	port := os.Getenv("PORT")
