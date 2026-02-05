@@ -187,9 +187,9 @@ const FormularioOwner = () => {
 
         <div className="flex border-b text-sm">
 
-          <button onClick={() => setStep(1)} className={`flex-1 p-4 text-center font-bold transition ${step === 1 ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>1. Datos de Dueño</button>
+          <button onClick={() => setStep(1)} className={`flex-1 p-4 text-center font-bold transition ${step === 1 ? 'bg-brand text-white' : 'bg-slate-50 text-slate-400'}`}>1. Datos de Dueño</button>
 
-          <button onClick={() => setStep(2)} className={`flex-1 p-4 text-center font-bold transition ${step === 2 ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>2. Tus Mascotas</button>
+          <button onClick={() => setStep(2)} className={`flex-1 p-4 text-center font-bold transition ${step === 2 ? 'bg-brand text-white' : 'bg-slate-50 text-slate-400'}`}>2. Tus Mascotas</button>
 
         </div>
 
@@ -217,7 +217,7 @@ const FormularioOwner = () => {
 
               </div>
 
-              <button type="button" onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold mt-6 shadow-lg hover:bg-blue-700 transition">Siguiente: Mascotas</button>
+              <button type="button" onClick={() => setStep(2)} className="w-full bg-brand text-white py-4 rounded-2xl font-bold mt-6 shadow-lg hover:bg-blue-700 transition">Siguiente: Mascotas</button>
 
             </div>
 
@@ -253,7 +253,7 @@ const FormularioOwner = () => {
 
                   <div className="flex items-center gap-2 mb-4">
 
-                    <p className="text-xs font-black text-blue-600 uppercase tracking-wider">Mascota #{index + 1}</p>
+                    <p className="text-xs font-black text-brand uppercase tracking-wider">Mascota #{index + 1}</p>
 
                     {!pet.isNew && <span className="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-md font-bold">GUARDADA</span>}
 
@@ -291,7 +291,7 @@ const FormularioOwner = () => {
   {/* Lógica para mostrar la caja de texto si selecciona "Other" */}
   {pet.species === 'Other' && (
     <div className="mt-2 animate-fadeIn">
-      <label className="text-[9px] font-black text-blue-600 uppercase ml-1">Especifique especie</label>
+      <label className="text-[9px] font-black text-brand uppercase ml-1">Especifique especie</label>
       <input
         type="text"
         placeholder="Ej: Hurón, Conejo, Tigre..."
@@ -357,7 +357,7 @@ const FormularioOwner = () => {
 
 
 
-              <button type="button" onClick={addMascota} className="w-full py-4 border-2 border-dashed border-blue-200 text-blue-600 rounded-2xl font-bold hover:bg-blue-50 transition-colors tracking-wide">+ AÑADIR OTRA MASCOTA</button>
+              <button type="button" onClick={addMascota} className="w-full py-4 border-2 border-dashed border-blue-200 text-brand rounded-2xl font-bold hover:bg-blue-50 transition-colors tracking-wide">+ AÑADIR OTRA MASCOTA</button>
 
 
 

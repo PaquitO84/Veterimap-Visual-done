@@ -104,7 +104,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full py-4 bg-brand text-white font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
@@ -117,7 +117,7 @@ const Login = () => {
 
         <div className="mt-8 text-center text-slate-500 text-sm font-medium">
           ¿Aún no tienes cuenta?{' '}
-          <Link to="/registro" className="text-blue-600 font-bold hover:underline">
+          <Link to="/registro" className="text-brand font-bold hover:underline">
             Crea una aquí
           </Link>
         </div>

@@ -9,7 +9,8 @@ const AgendaVet = () => {
   const [profile, setProfile] = useState(null);
   const [appointments, setAppointments] = useState([]); 
   const [loading, setLoading] = useState(true);
-  
+  const [professionalId, setProfessionalId] = useState(null);
+
   // Estados de Filtro
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,6 +21,37 @@ const AgendaVet = () => {
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
   const [rescheduleNote, setRescheduleNote] = useState('');
+
+ useEffect(() => {
+  const loadDashboardData = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      
+      const userDataResponse = await api.request('/me'); 
+      // DESEMPAQUETADO: Extraemos el objeto real del usuario
+      // Si el backend envía { data: { name: 'David' } } usamos .data
+      const userData = userDataResponse?.data || userDataResponse;
+      setProfile(userData);
+
+      const profResp = await api.request('/users/me/professional-profile');
+      const profData = profResp?.data || profResp;
+      
+      if (profData?.id) {
+        setProfessionalId(profData.id);
+      }
+
+      const appResp = await api.getMyAppointments();
+      setAppointments(appResp?.data || (Array.isArray(appResp) ? appResp : []));
+      
+    } catch (err) {
+      console.error("Error cargando dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  loadDashboardData();
+}, [user]);
 
   // 1. CARGA DE CITAS
   const loadAppointments = useCallback(async () => {
@@ -158,7 +190,7 @@ const AgendaVet = () => {
             onClick={() => setFilterStatus(s.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all duration-200 ${
               filterStatus === s.id 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105' 
+                ? 'bg-brand text-white shadow-lg shadow-blue-200 scale-105' 
                 : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
             }`}
           >
@@ -180,25 +212,32 @@ const AgendaVet = () => {
           <Link to="/backoffice-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
             <i className="fas fa-columns mr-3 w-5"></i> Dashboard
           </Link>
-          <Link to="/agenda-vet" className="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+          <Link to="/agenda-vet" className="flex items-center p-3 bg-brand rounded-lg font-bold">
             <i className="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
           </Link>
           <Link to="/clientes" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
             <i className="fas fa-users mr-3 w-5"></i> Clientes
           </Link>
-          <button onClick={() => navigate(`/profile-vet/${user?.user_id || user?.id}`)} className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition w-full text-left">
-            <i className="fas fa-external-link-alt mr-3 w-5"></i> Mi Perfil Público
-          </button>
-          <div className="border-t border-slate-800 my-4 pt-4">
-             <Link to="/formulario-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
-                <i className="fas fa-user-edit mr-3 w-5"></i> Editar Datos
-             </Link>
-          </div>
-          <button onClick={logout} className="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
-            <i className="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
-          </button>
-        </nav>
-      </aside>
+          <button 
+  onClick={() => {
+    if (professionalId) {
+      navigate(`/profile-vet/${professionalId}`);
+    } else {
+      alert("Aún no has creado tu perfil profesional.");
+    }
+  }}
+ className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition w-full"
+ >
+   <i className="fas fa-external-link-alt mr-3 w-5"></i> Mi Perfil Público
+ </button>
+           <Link to="/formulario-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition border-t border-slate-800 pt-5">
+             <i className="fas fa-user-edit mr-3 w-5"></i> Editar Datos
+           </Link>
+           <button onClick={logout} className="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+             <i className="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+           </button>
+         </nav>
+       </aside>
 
       <main className="flex-1 p-8">
         <header className="flex justify-between items-center mb-10">
@@ -215,7 +254,7 @@ const AgendaVet = () => {
         : `${profile?.name || user?.name || 'Veterinario'}`
       }
     </p>
-              <span className="text-[10px] text-blue-600 font-black uppercase tracking-tighter">Sesión Pro</span>
+              <span className="text-[10px] text-brand font-black uppercase tracking-tighter">Sesión Pro</span>
             </div>
             <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-lg border-2 border-white shadow-sm overflow-hidden">
       {profile?.logo_url ? (
@@ -255,7 +294,7 @@ const AgendaVet = () => {
         {/* SECCIÓN 3: AGENDA Y CALENDARIO */}
 <div className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center justify-between gap-4 transition-all duration-300 ${filterStatus !== 'ALL' ? 'opacity-40 grayscale scale-[0.98]' : 'opacity-100'}`}>
     <div className="flex items-center gap-3">
-        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><i className="fas fa-calendar-day"></i></div>
+        <div className="bg-blue-100 text-brand p-2 rounded-lg"><i className="fas fa-calendar-day"></i></div>
         <div className="flex flex-col">
           <span className="text-[9px] font-black text-slate-400 uppercase">Filtrar por día</span>
           <input 
@@ -272,7 +311,7 @@ const AgendaVet = () => {
     {filterStatus !== 'ALL' && (
       <button 
         onClick={() => setFilterStatus('ALL')} 
-        className="text-blue-600 font-bold text-xs hover:underline"
+        className="text-brand font-bold text-xs hover:underline"
       >
         Limpiar filtros y ver todo
       </button>
@@ -283,9 +322,9 @@ const AgendaVet = () => {
           <div className="p-6 border-b bg-gray-50/50 flex justify-between items-center">
             <h3 className="font-bold text-gray-800">
               {filterStatus === 'ALL' ? (
-                <>Agenda del día: <span className="text-blue-600 ml-1">{new Date(selectedDate).toLocaleDateString(undefined, { dateStyle: 'long' })}</span></>
+                <>Agenda del día: <span className="text-brand ml-1">{new Date(selectedDate).toLocaleDateString(undefined, { dateStyle: 'long' })}</span></>
               ) : (
-                <>Historial: <span className="text-blue-600 ml-1 uppercase">{filterStatus}</span></>
+                <>Historial: <span className="text-brand ml-1 uppercase">{filterStatus}</span></>
               )}
             </h3>
             <span className="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold text-slate-500">{filteredAppointments.length} Resultados</span>
@@ -293,7 +332,7 @@ const AgendaVet = () => {
           <div className="divide-y divide-gray-100">
             {loading ? (
               <div className="p-20 text-center">
-                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand border-t-transparent"></div>
                  <p className="mt-4 text-slate-400 font-medium">Buscando citas...</p>
               </div>
             ) : filteredAppointments.length === 0 ? (
@@ -339,7 +378,7 @@ const AgendaVet = () => {
               </div>
               <div className="flex gap-3 pt-4">
                 <button onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition">Cancelar</button>
-                <button onClick={handleReschedule} className="flex-[2] px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition">Enviar Propuesta</button>
+                <button onClick={handleReschedule} className="flex-[2] px-4 py-4 bg-brand text-white rounded-2xl font-bold hover:bg-blue-700 transition">Enviar Propuesta</button>
               </div>
             </div>
           </div>
@@ -375,7 +414,7 @@ const AppointmentCard = ({ app, getStatusClass, updateStatus, setSelectedAppId, 
       {app.status === 'PENDING' && showActions ? (
     <div className="flex gap-2">
       <button onClick={() => updateStatus(app.id, 'CONFIRMED')} className="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-emerald-600 transition shadow-sm uppercase">Confirmar</button>
-      <button onClick={() => { setSelectedAppId(app.id); setIsModalOpen(true); }} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-blue-600 transition shadow-sm uppercase">Reagendar</button>
+      <button onClick={() => { setSelectedAppId(app.id); setIsModalOpen(true); }} className="bg-blue-500 text-white px-4 py-2 rounded-xl text-[10px] font-black hover:bg-brand transition shadow-sm uppercase">Reagendar</button>
       <button onClick={() => updateStatus(app.id, 'CANCELLED')} className="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black hover:bg-red-50 transition uppercase">Rechazar</button>
     </div>
     ) : app.status === 'RESCHEDULED' ? (
@@ -393,7 +432,7 @@ const AppointmentCard = ({ app, getStatusClass, updateStatus, setSelectedAppId, 
        {/* Acciones adicionales para citas confirmadas */}
        {app.status === 'CONFIRMED' && (
           <div className="flex gap-2">
-            <button onClick={() => updateStatus(app.id, 'COMPLETED')} className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[9px] font-black hover:bg-blue-600 transition uppercase">Finalizar</button>
+            <button onClick={() => updateStatus(app.id, 'COMPLETED')} className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[9px] font-black hover:bg-brand transition uppercase">Finalizar</button>
             <button onClick={() => updateStatus(app.id, 'NOSHOW')} className="border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg text-[9px] font-black hover:bg-red-50 hover:text-red-500 transition uppercase">Ausente</button>
           </div>
            )}

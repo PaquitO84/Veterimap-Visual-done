@@ -73,7 +73,7 @@ const CitasOwner = () => {
     const configs = {
       'CONFIRMED':   { color: 'bg-green-100 text-green-700', text: 'Confirmada' },
       'PENDING':     { color: 'bg-orange-100 text-orange-700', text: 'Esperando Vet' },
-      'RESCHEDULED': { color: 'bg-blue-600 text-white animate-pulse', text: 'Acción Requerida' },
+      'RESCHEDULED': { color: 'bg-brand text-white animate-pulse', text: 'Acción Requerida' },
       'COMPLETED':   { color: 'bg-purple-100 text-purple-700', text: 'Finalizada' },
       'CANCELLED':   { color: 'bg-red-100 text-red-700', text: 'Cancelada' },
       'NOSHOW':      { color: 'bg-slate-200 text-slate-600', text: 'No asististe' }
@@ -89,7 +89,7 @@ const CitasOwner = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
     </div>
   );
 
@@ -97,41 +97,77 @@ const CitasOwner = () => {
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 font-sans">
          
          {/* Sidebar Responsiva */}
-         <aside className="fixed bottom-0 left-0 w-full bg-slate-900 text-white md:relative md:w-64 md:h-screen flex md:flex-col z-50 border-t border-slate-800 md:border-t-0 shadow-2xl">
-           <div className="hidden md:block p-6 text-xl font-black tracking-tight text-blue-400">
-             VETERIMAP
-           </div>
-           
-           <nav className="flex flex-row md:flex-col w-full justify-around md:justify-start md:mt-4 px-2 md:px-4 py-2 md:py-0 md:space-y-1">
-             <Link to="/landingpage" className="flex flex-col md:flex-row items-center p-2 md:p-3 hover:bg-slate-800 rounded-xl transition group">
-               <span className="text-xl md:mr-3">🏠</span>
-               <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Inicio</span>
-             </Link>
-             <Link to="/mis-citas" className="flex flex-col md:flex-row items-center p-2 md:p-3 hover:bg-slate-800 rounded-xl transition group">
-               <span className="text-xl md:mr-3">📅</span>
-               <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Citas</span>
-             </Link>
-             <Link to="/mis-mascotas" className="flex flex-col md:flex-row items-center p-2 md:p-3 hover:bg-slate-800 rounded-xl transition group">
-               <span className="text-xl md:mr-3">🐕</span>
-               <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Mascotas</span>
-             </Link>
-             <Link to="/mapa" className="flex flex-col md:flex-row items-center p-2 md:p-3 hover:bg-slate-800 rounded-xl transition group">
-               <span className="text-xl md:mr-3">🔍</span>
-               <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Buscar</span>
-             </Link>
-             <Link to="/formulario-owner" className="flex flex-col md:flex-row items-center p-2 md:p-3 hover:bg-slate-800 rounded-xl transition group">
-               <span className="text-xl md:mr-3">⚙️</span>
-               <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Editar Perfil</span>
-             </Link>
-           </nav>
-   
-           <button 
-             onClick={handleLogout} 
-             className="hidden md:flex items-center gap-3 p-3 text-red-400 hover:bg-red-900/20 rounded-xl transition font-bold mt-auto mb-6 mx-4"
-           >
-             <span>🚪</span> Cerrar Sesión
-           </button>
-         </aside>
+         {/* Sidebar Responsiva */}
+             <aside className="fixed bottom-0 left-0 w-full bg-slate-900 text-white md:relative md:w-64 md:h-screen flex md:flex-col z-50 border-t border-slate-800 md:border-t-0 shadow-2xl">
+          {/* LOGO SUPERIOR (Igual que en VET) */}
+          <div className="p-6 text-2xl font-bold border-b border-slate-800">
+          <i className="fas fa-user-md mr-2 text-blue-400"></i> Veterimap 
+        </div>
+          
+          <nav className="flex flex-row md:flex-col w-full justify-around md:justify-start md:mt-6 px-2 md:px-4 py-2 md:py-0 md:space-y-2">
+            
+            {/* Dashboard */}
+            <Link 
+              to="/backoffice-owner" 
+              className={`flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl transition ${
+                location.pathname === '/backoffice-owner' ? 'bg-brand text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <i className="fas fa-home md:mr-3 text-lg md:text-sm"></i>
+              <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Dashboard</span>
+            </Link>
+        
+            {/* Citas */}
+            <Link 
+              to="/mis-citas" 
+              className={`flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl transition ${
+                location.pathname === '/mis-citas' ? 'bg-brand text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <i className="fas fa-calendar-alt md:mr-3 text-lg md:text-sm"></i>
+              <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Citas</span>
+            </Link>
+        
+            {/* Mascotas */}
+            <Link 
+              to="/mis-mascotas" 
+              className={`flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl transition ${
+                location.pathname === '/mis-mascotas' ? 'bg-brand text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <i className="fas fa-paw md:mr-3 text-lg md:text-sm"></i>
+              <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Mascotas</span>
+            </Link>
+        
+            {/* Buscar (Mapa) */}
+            <Link 
+              to="/mapa" 
+              className="flex flex-col md:flex-row items-center p-2 md:p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition"
+            >
+              <i className="fas fa-search md:mr-3 text-lg md:text-sm"></i>
+              <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Buscar</span>
+            </Link>
+        
+            {/* Editar Perfil */}
+            <Link 
+              to="/formulario-owner" 
+              className={`flex flex-col md:flex-row items-center p-2 md:p-3 rounded-xl transition border-t border-slate-800 md:mt-4 pt-4 ${
+                location.pathname === '/formulario-owner' ? 'bg-brand text-white' : 'text-slate-400 hover:bg-slate-800'
+              }`}
+            >
+              <i className="fas fa-user-cog md:mr-3 text-lg md:text-sm"></i>
+              <span className="text-[10px] md:text-sm font-bold uppercase md:capitalize">Mi Perfil</span>
+            </Link>
+          </nav>
+        
+          {/* Cerrar Sesión (Visible solo en desktop al fondo) */}
+          <button 
+            onClick={handleLogout} 
+            className="hidden md:flex items-center gap-3 p-3 text-red-400 hover:bg-red-900/20 rounded-xl transition font-bold mt-auto mb-6 mx-4"
+          >
+            <i className="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </button>
+        </aside>
 
       <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
         <header className="mb-8">
@@ -184,7 +220,7 @@ const CitasOwner = () => {
                               setSelectedApp(app);      // Pasamos el objeto 'app' completo
                               setIsNoteModalOpen(true); // Abrimos el modal
                             }} 
-                            className="p-2 hover:bg-blue-50 rounded-full text-blue-400 hover:text-blue-600 transition-colors"
+                            className="p-2 hover:bg-blue-50 rounded-full text-blue-400 hover:text-brand transition-colors"
                             title="Ver detalles y notas"
                           >
                             <span className="text-lg">📝</span>
@@ -257,7 +293,7 @@ const CitasOwner = () => {
                   <p className="text-lg font-bold text-blue-700">
                     {new Date(selectedApp.appointment_date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
-                  <p className="text-blue-600 font-medium">A las {new Date(selectedApp.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} horas</p>
+                  <p className="text-brand font-medium">A las {new Date(selectedApp.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} horas</p>
                 </div>
               )}
                 </div>

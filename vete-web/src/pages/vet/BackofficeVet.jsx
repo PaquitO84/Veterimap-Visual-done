@@ -61,7 +61,7 @@ const BackofficeVet = () => {
           <i className="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span className="text-blue-400 text-xs">PRO</span>
         </div>
         <nav className="mt-6 px-4 space-y-2">
-          <Link to="/backoffice-vet" className="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+          <Link to="/backoffice-vet" className="flex items-center p-3 bg-brand rounded-lg font-bold">
             <i className="fas fa-columns mr-3 w-5"></i> Dashboard
           </Link>
           <Link to="/agenda-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
@@ -118,7 +118,7 @@ const BackofficeVet = () => {
           <i className="fas fa-check-circle mr-1"></i> Suscripción Activa
         </span>
       ) : (
-        <p className={`text-[10px] font-black uppercase tracking-wider ${trialDays <= 5 ? 'text-red-500 animate-pulse' : 'text-blue-600'}`}>
+        <p className={`text-[10px] font-black uppercase tracking-wider ${trialDays <= 5 ? 'text-red-500 animate-pulse' : 'text-brand'}`}>
           {trialDays <= 0 
             ? 'Periodo de prueba finalizado' 
             : trialDays <= 10 
@@ -147,7 +147,7 @@ const BackofficeVet = () => {
               <p className="text-gray-400 text-xs font-bold uppercase">Citas Hoy</p>
               <h3 className="text-3xl font-black">{appointments.length}</h3>
             </div>
-            <div className="bg-blue-50 text-blue-600 p-3 rounded-lg"><i className="fas fa-calendar-day"></i></div>
+            <div className="bg-blue-50 text-brand p-3 rounded-lg"><i className="fas fa-calendar-day"></i></div>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
@@ -159,7 +159,7 @@ const BackofficeVet = () => {
           <Link to="/clientes" className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition">
             <div>
               <p className="text-gray-400 text-xs font-bold uppercase">Mis Clientes</p>
-              <h3 className="text-sm font-bold text-blue-600 mt-1">Ver listado <i className="fas fa-chevron-right ml-1"></i></h3>
+              <h3 className="text-sm font-bold text-brand mt-1">Ver listado <i className="fas fa-chevron-right ml-1"></i></h3>
             </div>
             <div className="bg-green-50 text-green-600 p-3 rounded-lg"><i className="fas fa-users"></i></div>
           </Link>
@@ -168,7 +168,7 @@ const BackofficeVet = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b flex justify-between items-center bg-gray-50">
             <h3 className="font-bold text-lg text-gray-800">Próximas Citas (Resumen)</h3>
-            <Link to="/agenda-vet" className="text-blue-600 font-bold text-sm hover:underline">
+            <Link to="/agenda-vet" className="text-brand font-bold text-sm hover:underline">
               Ver agenda completa <i className="fas fa-arrow-right ml-1"></i>
             </Link>
           </div>
@@ -193,7 +193,7 @@ const BackofficeVet = () => {
                 ) : (
                   appointments.slice(0, 5).map((app, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 font-bold text-blue-600">
+                      <td className="px-6 py-4 font-bold text-brand">
                         {app.appointment_date ? new Date(app.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-800">{app.pet_name || 'Mascota'}</td>

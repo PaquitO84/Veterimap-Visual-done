@@ -27,14 +27,14 @@ const LandingPage = () => {
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-blue-600 flex items-center">
+          <Link to="/" className="text-2xl font-bold text-brand flex items-center">
             <i className="fas fa-paw mr-2"></i> Veterimap
           </Link>
           <div className="hidden md:flex space-x-6 items-center">
-            <a href="#servicios" className="text-gray-600 hover:text-blue-600">Servicios</a>
-            <Link to="/mapa" className="text-gray-600 hover:text-blue-600">Explorar Mapa</Link>
+            <a href="#servicios" className="text-gray-600 hover:text-brand">Servicios</a>
+            <Link to="/mapa" className="text-gray-600 hover:text-brand">Explorar Mapa</Link>
             <Link to="/login" className="font-medium">Iniciar Sesión</Link>
-            <Link to="/registro" className="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition">
+            <Link to="/registro" className="bg-brand text-white px-5 py-2 rounded-full hover:bg-blue-700 transition">
               Regístrate
             </Link>
           </div>
@@ -46,7 +46,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-6 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-5xl font-extrabold text-gray-900 leading-tight mb-6">
-              Encuentra al mejor aliado para la <span className="text-blue-600">salud de tu mascota</span>.
+              Encuentra al mejor aliado para la <span className="text-brand">salud de tu mascota</span>.
             </h1>
             <p className="text-xl text-gray-600 mb-10">
               Busca clínicas, hospitales y especialistas cerca de ti. La red más grande de profesionales veterinarios a un clic.
@@ -85,7 +85,7 @@ const LandingPage = () => {
               </div>
               <button 
                 type="submit"
-                className="bg-blue-600 text-white px-10 py-4 rounded-lg font-bold hover:bg-blue-700 transition transform hover:scale-105"
+                className="bg-brand text-white px-10 py-4 rounded-lg font-bold hover:bg-blue-700 transition transform hover:scale-105"
               >
                 BUSCAR AHORA
               </button>
@@ -129,7 +129,7 @@ const LandingPage = () => {
 // Subcomponente para las tarjetas para evitar repetición
 const RoleCard = ({ title, description, buttonText, icon, iconColor, link }) => {
   const colorClasses = {
-    blue: "bg-blue-100 text-blue-600 group-hover:bg-blue-600",
+    blue: "bg-blue-100 text-brand group-hover:bg-brand",
     green: "bg-green-100 text-green-600 group-hover:bg-green-600"
   };
 
@@ -142,7 +142,7 @@ const RoleCard = ({ title, description, buttonText, icon, iconColor, link }) => 
       <p className="text-gray-600 mb-6">{description}</p>
       <Link 
         to={link}
-        className="inline-block border-2 border-blue-600 text-blue-600 font-bold px-8 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition"
+        className="inline-block border-2 border-brand text-brand font-bold px-8 py-3 rounded-lg hover:bg-brand hover:text-white transition"
       >
         {buttonText}
       </Link>

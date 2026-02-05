@@ -81,7 +81,7 @@ const BookingPage = () => {
           </p>
           <button 
             onClick={() => navigate('/backoffice-owner')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all"
+            className="w-full bg-brand hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all"
           >
             VOLVER A MIS CITAS
           </button>
@@ -128,7 +128,7 @@ const BookingPage = () => {
                     onClick={() => setSelectedTime(slot)}
                     className={`py-3 rounded-xl text-sm font-black transition-all border ${
                       selectedTime === slot 
-                        ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-900/40' 
+                        ? 'bg-brand border-blue-400 text-white shadow-lg shadow-blue-900/40' 
                         : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
                     }`}
                   >
@@ -166,7 +166,7 @@ const BookingPage = () => {
 
             <button 
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl transition shadow-xl shadow-blue-900/20 uppercase tracking-widest"
+              className="w-full bg-brand hover:bg-blue-700 text-white font-black py-5 rounded-2xl transition shadow-xl shadow-blue-900/20 uppercase tracking-widest"
             >
               Confirmar Solicitud
             </button>

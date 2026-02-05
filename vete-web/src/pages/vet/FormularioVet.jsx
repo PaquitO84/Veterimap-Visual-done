@@ -317,7 +317,7 @@ const FormularioVet = () => {
 
           onClick={() => navigate(-1)}
 
-          className="mb-6 flex items-center text-slate-500 hover:text-blue-600 font-bold transition-colors group"
+          className="mb-6 flex items-center text-slate-500 hover:text-brand font-bold transition-colors group"
 
         >
 

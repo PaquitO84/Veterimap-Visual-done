@@ -13,7 +13,8 @@ const Clientes = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState(null);
- 
+  const [professionalId, setProfessionalId] = useState(null);
+  const [appointments, setAppointments] = useState([]);
   
 
   // Modal states
@@ -89,6 +90,35 @@ const Clientes = () => {
   (c.name || c.owner_name)?.toLowerCase().includes(searchTerm.toLowerCase())
 );
 
+useEffect(() => {
+  const loadInitialData = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      // Hacemos todas las llamadas en una sola ráfaga
+      const [userData, profData, appData] = await Promise.all([
+        api.request('/me'),
+        api.request('/users/me/professional-profile'),
+        api.request('/users/me/appointments')
+      ]);
+
+      setProfile(userData?.data || userData);
+      if (profData?.id || profData?.data?.id) {
+        setProfessionalId(profData?.id || profData?.data?.id);
+      }
+      // Aquí se soluciona el error:
+      setAppointments(appData?.data || (Array.isArray(appData) ? appData : []));
+      
+      await fetchClients();
+    } catch (err) {
+      console.error("Error en carga inicial:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  loadInitialData();
+}, [user, fetchClients]);
+
   useEffect(() => {
   const loadDoctorData = async () => {
     try {
@@ -120,31 +150,30 @@ const Clientes = () => {
           </Link>
 
           {/* ACTIVO */}
-          <div className="flex items-center p-3 bg-blue-600 rounded-xl font-bold shadow-lg shadow-blue-900/20">
+          <div className="flex items-center p-3 bg-brand rounded-xl font-bold shadow-lg shadow-blue-900/20">
             <i className="fas fa-users mr-3 w-5 text-center"></i> Clientes
           </div>
 
           <button 
-            onClick={() => navigate(`/profile-vet/${user?.user_id || user?.id}`)}
-            className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition w-full text-left"
-          >
-            <i className="fas fa-external-link-alt mr-3 w-5 text-center"></i> Mi Perfil Público
-          </button>
-
-          <div className="border-t border-slate-800 my-4 pt-4">
-            <Link to="/formulario-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
-              <i className="fas fa-user-edit mr-3 w-5 text-center"></i> Editar Datos
+  onClick={() => {
+    if (professionalId) {
+      navigate(`/profile-vet/${professionalId}`);
+    } else {
+      alert("Aún no has creado tu perfil profesional.");
+    }
+  }}
+  className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition w-full"
+  >
+    <i className="fas fa-external-link-alt mr-3 w-5"></i> Mi Perfil Público
+  </button>
+            <Link to="/formulario-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition border-t border-slate-800 pt-5">
+              <i className="fas fa-user-edit mr-3 w-5"></i> Editar Datos
             </Link>
-          </div>
-
-          <button 
-            onClick={logout} 
-            className="w-full flex items-center p-3 text-red-400 hover:bg-red-900/20 hover:text-red-300 rounded-lg transition mt-8"
-          >
-            <i className="fas fa-sign-out-alt mr-3 w-5 text-center"></i> Cerrar Sesión
-          </button>
-        </nav>
-      </aside>
+            <button onClick={logout} className="w-full flex items-center p-3 text-red-400 hover:bg-slate-800 rounded-lg transition mt-10">
+              <i className="fas fa-sign-out-alt mr-3 w-5"></i> Cerrar Sesión
+            </button>
+          </nav>
+        </aside>
 
       {/* Contenido Principal */}
       <main className="flex-1 p-6 md:p-8">
@@ -162,7 +191,7 @@ const Clientes = () => {
                   : `${profile?.name || user?.name || 'Veterinario'}`
                 }
               </p>
-              <span className="text-[10px] text-blue-600 font-black uppercase tracking-tighter">
+              <span className="text-[10px] text-brand font-black uppercase tracking-tighter">
                 Panel Veterimap Pro
               </span>
             </div>
@@ -213,7 +242,7 @@ const Clientes = () => {
           <div className="divide-y divide-gray-100">
             {loading ? (
               <div className="p-20 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
               </div>
             ) : filteredClients.length === 0 ? (
               <div className="p-20 text-center text-slate-400 italic">
@@ -224,7 +253,7 @@ const Clientes = () => {
               filteredClients.map((owner) => (
                 <div key={owner.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-blue-50/20 transition group">
                   <div className="flex items-center space-x-5">
-                    <div className="bg-slate-100 group-hover:bg-white w-12 h-12 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition shadow-sm">
+                    <div className="bg-slate-100 group-hover:bg-white w-12 h-12 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-brand transition shadow-sm">
                       <i className="fas fa-user-circle text-2xl"></i>
                     </div>
                     <div>
@@ -236,7 +265,7 @@ const Clientes = () => {
                   </div>
                   <button
                     onClick={() => openExpediente(owner)}
-                    className="mt-4 sm:mt-0 bg-slate-800 text-white font-bold hover:bg-blue-600 px-6 py-3 rounded-xl transition text-xs uppercase tracking-widest flex items-center gap-2"
+                    className="mt-4 sm:mt-0 bg-slate-800 text-white font-bold hover:bg-brand px-6 py-3 rounded-xl transition text-xs uppercase tracking-widest flex items-center gap-2"
                   >
                     <i className="fas fa-folder-open"></i> Abrir Expediente
                   </button>
@@ -255,7 +284,7 @@ const Clientes = () => {
             {/* Header Modal */}
             <div className="p-8 border-b flex justify-between items-center bg-white">
               <div className="flex items-center gap-4">
-                  <div className="bg-blue-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+                  <div className="bg-brand text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
                       <i className="fas fa-file-medical-alt text-xl"></i>
                   </div>
                   <div>
@@ -283,11 +312,11 @@ const Clientes = () => {
                         onClick={() => selectPet(pet)}
                         className={`w-full text-left p-4 rounded-2xl text-sm font-bold transition-all flex items-center gap-3 ${
                           currentPet?.id === pet.id
-                            ? 'bg-white text-blue-600 shadow-md border-l-4 border-blue-600'
+                            ? 'bg-white text-brand shadow-md border-l-4 border-brand'
                             : 'text-slate-500 hover:bg-white hover:shadow-sm'
                         }`}
                       >
-                        <i className={`fas fa-paw ${currentPet?.id === pet.id ? 'text-blue-600' : 'text-slate-300'}`}></i> 
+                        <i className={`fas fa-paw ${currentPet?.id === pet.id ? 'text-brand' : 'text-slate-300'}`}></i> 
                         {pet.name}
                       </button>
                     ))}
@@ -304,7 +333,7 @@ const Clientes = () => {
                         </h4>
                         <button
                           onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-                          className="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition"
+                          className="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand transition"
                         >
                           Ir a Gestión Médica Completa
                         </button>
@@ -312,11 +341,11 @@ const Clientes = () => {
                     <div className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
     <div>
         <p className="text-blue-800 font-black text-sm">Consulta en curso</p>
-        <p className="text-blue-600 text-[11px] font-bold tracking-tighter uppercase italic">Registra el diagnóstico y tratamiento actual</p>
+        <p className="text-brand text-[11px] font-bold tracking-tighter uppercase italic">Registra el diagnóstico y tratamiento actual</p>
     </div>
     <button
         onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-        className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform active:scale-95 flex items-center gap-2"
+        className="bg-brand text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform active:scale-95 flex items-center gap-2"
     >
         <i className="fas fa-stethoscope"></i> Atender Paciente
     </button>
@@ -326,7 +355,7 @@ const Clientes = () => {
                         {history.slice(0, 3).map((entry, idx) => (
                           <div key={idx} className="bg-slate-50 border border-slate-100 p-5 rounded-2xl">
                             <div className="flex justify-between items-center mb-4">
-                              <span className="text-[10px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-tighter">
+                              <span className="text-[10px] font-black bg-brand text-white px-3 py-1 rounded-full uppercase tracking-tighter">
                                 {new Date(entry.created_at).toLocaleDateString()}
                               </span>
                               <span className="text-[10px] font-bold text-slate-300 uppercase">Visita #{idx + 1}</span>
@@ -342,7 +371,7 @@ const Clientes = () => {
                         
                         <button
                           onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-                          className="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition"
+                          className="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-brand transition"
                         >
                           Ir a Gestión Médica Completa
                         </button>
@@ -359,7 +388,7 @@ const Clientes = () => {
                             alert("Por favor, selecciona una mascota en la columna de la izquierda.");
                           }
                         }}
-                        className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-xs"
+                        className="bg-brand text-white px-8 py-3 rounded-xl font-bold text-xs"
                       >
                         + INICIAR HISTORIAL
                       </button>

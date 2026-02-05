@@ -1,7 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* Para que el carrusel de mascotas sea fluido y limpio */
+
+@layer base {
+  :root {
+    /* Color Corporativo Veterimap */
+    --brand-color: #24abb0;
+    --brand-dark: #1a8a8e;
+    --brand-light: #e9f6f7;
+  }
+}
+
+@layer components {
+  /* Clases de utilidad personalizadas para ahorrar tiempo */
+  .bg-brand {
+    background-color: var(--brand-color);
+  }
+  .text-brand {
+    color: var(--brand-color);
+  }
+  .border-brand {
+    border-color: var(--brand-color);
+  }
+  .btn-brand {
+    @apply bg-[#24abb0] text-white font-bold py-2 px-6 rounded-xl hover:bg-[#1a8a8e] transition-all active:scale-95 shadow-md;
+  }
+}
+
+/* Tus estilos previos se mantienen */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
