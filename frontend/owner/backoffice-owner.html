@@ -10,11 +10,11 @@
 <body class="bg-gray-50 flex">
 
     <aside class="w-64 bg-white h-screen shadow-md sticky top-0 hidden md:block">
-        <div class="p-6 text-2xl font-bold text-blue-600 border-b">
+        <div class="p-6 text-2xl font-bold text-brand border-b">
             <i class="fas fa-paw mr-2"></i> Veterimap
         </div>
         <nav class="mt-6 px-4 space-y-2">
-            <a href="backoffice-owner.html" class="flex items-center p-3 text-blue-600 bg-blue-50 rounded-lg font-bold">
+            <a href="backoffice-owner.html" class="flex items-center p-3 text-brand bg-blue-50 rounded-lg font-bold">
                 <i class="fas fa-home mr-3 w-5"></i> Inicio
             </a>
             <a href="mascotas-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition">
@@ -36,11 +36,11 @@
         <header class="flex justify-between items-center mb-10">
             <h1 class="text-3xl font-bold text-gray-800" id="welcome-message">Hola, Usuario 👋</h1>
             <div class="flex items-center space-x-4">
-                <button class="relative p-2 text-gray-400 hover:text-blue-600">
+                <button class="relative p-2 text-gray-400 hover:text-brand">
                     <i class="fas fa-bell text-xl"></i>
                     <span id="notif-badge" class="absolute top-0 right-0 bg-red-500 w-2 h-2 rounded-full hidden"></span>
                 </button>
-                <img id="user-avatar" src="https://via.placeholder.com/40" class="rounded-full border-2 border-blue-600" alt="Perfil">
+                <img id="user-avatar" src="https://via.placeholder.com/40" class="rounded-full border-2 border-brand" alt="Perfil">
             </div>
         </header>
 
@@ -48,13 +48,13 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <p class="text-gray-500 font-medium">Próxima Cita</p>
                 <h3 id="next-appointment-time" class="text-xl font-bold mt-2 text-gray-400 italic">No tienes citas próximas</h3>
-                <p id="next-appointment-vet" class="text-sm text-blue-600"></p>
+                <p id="next-appointment-vet" class="text-sm text-brand"></p>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <p class="text-gray-500 font-medium">Mascotas registradas</p>
                 <h3 id="pet-count" class="text-4xl font-bold mt-2">0</h3>
             </div>
-            <a href="mascotas-owner.html" class="bg-blue-600 text-white p-6 rounded-xl shadow-lg hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
+            <a href="mascotas-owner.html" class="bg-brand text-white p-6 rounded-xl shadow-lg hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
                 <i class="fas fa-plus-circle text-2xl mb-2"></i>
                 <span class="font-bold">Gestionar / Añadir Mascota</span>
             </a>
@@ -62,7 +62,7 @@
 
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Mis Mascotas</h2>
-            <a href="mascotas-owner.html" class="text-blue-600 font-bold hover:underline">Ver todas</a>
+            <a href="mascotas-owner.html" class="text-brand font-bold hover:underline">Ver todas</a>
         </div>
 
         <div id="pets-preview-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

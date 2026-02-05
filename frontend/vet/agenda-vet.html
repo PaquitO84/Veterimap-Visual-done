@@ -17,7 +17,7 @@
             <a href="backoffice-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
                 <i class="fas fa-columns mr-3 w-5"></i> Dashboard
             </a>
-            <a href="agenda-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+            <a href="agenda-vet.html" class="flex items-center p-3 bg-brand rounded-lg font-bold">
                 <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
             </a>
             <a href="clientes-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
@@ -53,7 +53,7 @@
             <div class="flex flex-col md:flex-row gap-4 items-center">
                 <label for="date-picker" class="font-medium text-gray-700">Seleccionar Fecha:</label>
                 <input type="date" id="date-picker" class="border border-gray-300 p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                <button onclick="loadAppointments()" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">
+                <button onclick="loadAppointments()" class="bg-brand text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">
                     <i class="fas fa-search mr-2"></i> Buscar Citas
                 </button>
             </div>
@@ -61,7 +61,7 @@
 
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg text-gray-800" id="current-date-title">Citas de Hoy: <span class="text-blue-600">--/--/----</span></h3>
+                <h3 class="font-bold text-lg text-gray-800" id="current-date-title">Citas de Hoy: <span class="text-brand">--/--/----</span></h3>
             </div>
             <div id="appointments-list" class="divide-y">
                 <p class="p-6 text-gray-500 text-center" id="no-appointments-message">No hay citas para la fecha seleccionada.</p>
@@ -82,7 +82,7 @@
                 </div>
                 <div class="flex justify-end gap-3">
                     <button onclick="closeRescheduleModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md">Cancelar</button>
-                    <button onclick="sendRescheduleProposal()" class="px-4 py-2 bg-blue-600 text-white rounded-md">Enviar Propuesta</button>
+                    <button onclick="sendRescheduleProposal()" class="px-4 py-2 bg-brand text-white rounded-md">Enviar Propuesta</button>
                 </div>
             </div>
         </div>
@@ -146,7 +146,7 @@
                     const row = `
                         <div class="p-6 flex items-center justify-between border-b hover:bg-gray-50 transition">
                             <div>
-                                <h4 class="font-bold text-lg text-blue-600">${new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</h4>
+                                <h4 class="font-bold text-lg text-brand">${new Date(app.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</h4>
                                 <p class="text-gray-700">Paciente: ${app.pet_name || 'N/A'} (${app.pet_type || 'N/A'})</p>
                                 <p class="text-sm text-gray-500">Dueño: ${app.owner_name || 'N/A'}</p>
                                 <p class="text-sm italic text-gray-600">Motivo: ${app.reason || 'Consulta'}</p>

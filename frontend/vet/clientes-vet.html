@@ -20,7 +20,7 @@
             <a href="agenda-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
                 <i class="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
             </a>
-            <a href="clientes-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+            <a href="clientes-vet.html" class="flex items-center p-3 bg-brand rounded-lg font-bold">
                 <i class="fas fa-users mr-3 w-5"></i> Clientes
             </a>
             <a href="profile-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
@@ -47,7 +47,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
             <div class="flex flex-col md:flex-row gap-4 items-center">
                 <input type="text" id="search-input" placeholder="Buscar dueño o mascota..." class="border border-gray-300 p-2 rounded-lg flex-1 focus:ring-blue-500 outline-none">
-                <button onclick="loadClients()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold">
+                <button onclick="loadClients()" class="bg-brand text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold">
                     <i class="fas fa-search mr-2"></i> Buscar
                 </button>
             </div>
@@ -132,15 +132,15 @@
                                         <input type="file" id="medical-files" class="hidden" multiple accept=".pdf,image/*" />
                                     </label>
                                 </div>
-                                <div id="file-list-preview" class="mt-2 text-xs text-blue-600 font-bold"></div>
+                                <div id="file-list-preview" class="mt-2 text-xs text-brand font-bold"></div>
                             </div>
 
                             <div class="flex items-center justify-between">
                                 <label class="flex items-center text-sm text-slate-600 cursor-pointer">
-                                    <input id="confirm-visit-checkbox" type="checkbox" class="w-4 h-4 text-blue-600 rounded mr-2">
+                                    <input id="confirm-visit-checkbox" type="checkbox" class="w-4 h-4 text-brand rounded mr-2">
                                     Confirmar visita realizada
                                 </label>
-                                <button onclick="saveClinicalEntry()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
+                                <button onclick="saveClinicalEntry()" class="bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg">
                                     Guardar y Notificar al Dueño
                                 </button>
                             </div>
@@ -173,7 +173,7 @@
             list.innerHTML += `
                 <div class="p-6 flex items-center justify-between hover:bg-slate-50 transition">
                     <div class="flex items-center space-x-4">
-                        <a href="profile-owner.html?id=${owner.owner_id}" class="bg-blue-100 p-3 rounded-full text-blue-600 hover:bg-blue-200 transition">
+                        <a href="profile-owner.html?id=${owner.owner_id}" class="bg-blue-100 p-3 rounded-full text-brand hover:bg-blue-200 transition">
                             <i class="fas fa-user"></i>
                         </a>
                         <div>
@@ -213,7 +213,7 @@
 
             pets.forEach(pet => {
                 sidebar.innerHTML += `
-                    <button onclick="selectPetForHistory('${pet.id}', '${pet.name}')" class="w-full text-left p-3 rounded-lg mb-2 text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition border border-transparent focus:border-blue-300 focus:bg-blue-50 focus:text-blue-600">
+                    <button onclick="selectPetForHistory('${pet.id}', '${pet.name}')" class="w-full text-left p-3 rounded-lg mb-2 text-sm font-medium hover:bg-blue-50 hover:text-brand transition border border-transparent focus:border-blue-300 focus:bg-blue-50 focus:text-brand">
                         <i class="fas fa-paw mr-2"></i> ${pet.name}
                     </button>
                 `;

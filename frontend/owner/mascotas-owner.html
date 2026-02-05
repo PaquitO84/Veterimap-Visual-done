@@ -9,10 +9,10 @@
 </head>
 <body class="bg-gray-50 flex">
     <aside class="w-64 bg-white h-screen shadow-md sticky top-0 hidden md:block">
-        <div class="p-6 text-2xl font-bold text-blue-600 border-b"><i class="fas fa-paw mr-2"></i> Veterimap</div>
+        <div class="p-6 text-2xl font-bold text-brand border-b"><i class="fas fa-paw mr-2"></i> Veterimap</div>
         <nav class="mt-6 px-4 space-y-2">
             <a href="backoffice-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i class="fas fa-home mr-3 w-5"></i> Inicio</a>
-            <a href="mascotas-owner.html" class="flex items-center p-3 text-blue-600 bg-blue-50 rounded-lg font-bold"><i class="fas fa-dog mr-3 w-5"></i> Mis Mascotas</a>
+            <a href="mascotas-owner.html" class="flex items-center p-3 text-brand bg-blue-50 rounded-lg font-bold"><i class="fas fa-dog mr-3 w-5"></i> Mis Mascotas</a>
             <a href="citas-owner.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition"><i class="fas fa-calendar-alt mr-3 w-5"></i> Mis Citas</a>
             <a href="mapa.html" class="flex items-center p-3 text-gray-600 hover:bg-gray-100 rounded-lg transition border-t mt-4"><i class="fas fa-search mr-3 w-5"></i> Buscar Clínica</a>
         </nav>
@@ -21,7 +21,7 @@
     <main class="flex-1 p-8">
         <header class="flex justify-between items-center mb-10">
             <h1 class="text-3xl font-bold text-gray-800">Mis Mascotas</h1>
-            <button onclick="openAddPetModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">
+            <button onclick="openAddPetModal()" class="bg-brand text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">
                 <i class="fas fa-plus mr-2"></i> Añadir Mascota
             </button>
         </header>
@@ -38,7 +38,7 @@
                     </div>
                     <div class="space-y-3">
                         <div class="p-3 bg-blue-50 rounded-lg">
-                            <p class="text-xs font-bold text-blue-600 uppercase">Último Diagnóstico</p>
+                            <p class="text-xs font-bold text-brand uppercase">Último Diagnóstico</p>
                             <p class="text-sm text-gray-700" id="last-diagnosis">Dermatitis alérgica estacional</p>
                         </div>
                         <div class="p-3 bg-green-50 rounded-lg">
@@ -46,7 +46,7 @@
                             <p class="text-sm text-gray-700" id="last-treatment">Apoquel 5mg (1/2 cada 12h)</p>
                         </div>
                     </div>
-                    <button onclick="viewFullHistory('pet_id')" class="w-full mt-4 py-2 text-blue-600 border border-blue-600 rounded-lg font-medium hover:bg-blue-50 transition">
+                    <button onclick="viewFullHistory('pet_id')" class="w-full mt-4 py-2 text-brand border border-brand rounded-lg font-medium hover:bg-blue-50 transition">
                         Ver Historial Completo
                     </button>
                 </div>
@@ -61,7 +61,7 @@
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div id="history-content" class="p-6 space-y-6">
-                <div class="border-l-4 border-blue-600 pl-4 py-2">
+                <div class="border-l-4 border-brand pl-4 py-2">
                     <div class="flex justify-between items-start">
                         <p class="font-bold text-gray-800">10/01/2026 - Consulta General</p>
                         <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">Dr. Alberto Ruíz</span>

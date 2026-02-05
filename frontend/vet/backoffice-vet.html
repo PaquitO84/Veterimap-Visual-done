@@ -14,7 +14,7 @@
             <i class="fas fa-user-md mr-2 text-blue-400"></i> Veterimap <span class="text-blue-400 text-xs">PRO</span>
         </div>
         <nav class="mt-6 px-4 space-y-2">
-            <a href="backoffice-vet.html" class="flex items-center p-3 bg-blue-600 rounded-lg font-bold">
+            <a href="backoffice-vet.html" class="flex items-center p-3 bg-brand rounded-lg font-bold">
                 <i class="fas fa-columns mr-3 w-5"></i> Dashboard
             </a>
             <a href="agenda-vet.html" class="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
@@ -57,7 +57,7 @@
                     <p class="text-gray-400 text-xs font-bold uppercase">Citas Hoy</p>
                     <h3 id="stats-citas-hoy" class="text-3xl font-black">0</h3>
                 </div>
-                <div class="bg-blue-50 text-blue-600 p-3 rounded-lg"><i class="fas fa-calendar-day"></i></div>
+                <div class="bg-blue-50 text-brand p-3 rounded-lg"><i class="fas fa-calendar-day"></i></div>
             </div>
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
@@ -69,7 +69,7 @@
             <a href="clientes-vet.html" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition">
                 <div>
                     <p class="text-gray-400 text-xs font-bold uppercase">Mis Clientes</p>
-                    <h3 class="text-sm font-bold text-blue-600 mt-1">Ver listado <i class="fas fa-chevron-right ml-1"></i></h3>
+                    <h3 class="text-sm font-bold text-brand mt-1">Ver listado <i class="fas fa-chevron-right ml-1"></i></h3>
                 </div>
                 <div class="bg-green-50 text-green-600 p-3 rounded-lg"><i class="fas fa-users"></i></div>
             </a>
@@ -78,7 +78,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">
                 <h3 class="font-bold text-lg text-gray-800">Próximas Citas (Resumen)</h3>
-                <a href="agenda-vet.html" class="text-blue-600 font-bold text-sm hover:underline">Ver agenda completa <i class="fas fa-arrow-right ml-1"></i></a>
+                <a href="agenda-vet.html" class="text-brand font-bold text-sm hover:underline">Ver agenda completa <i class="fas fa-arrow-right ml-1"></i></a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -160,7 +160,7 @@
                 appointments.slice(0, 5).forEach(app => { // Solo mostramos las 5 primeras
                     const row = `
                         <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-bold text-blue-600">${new Date(app.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                            <td class="px-6 py-4 font-bold text-brand">${new Date(app.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                             <td class="px-6 py-4 font-medium text-gray-800">${app.pet_name || 'Mascota'}</td>
                             <td class="px-6 py-4 text-gray-500">${app.owner_name || 'Cliente'}</td>
                             <td class="px-6 py-4">
