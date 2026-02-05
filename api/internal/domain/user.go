@@ -29,9 +29,13 @@ type User struct {
 	IsVerified         bool      `json:"is_verified"`
 	VerificationCode   string    `json:"verification_code"`
 	SubscriptionStatus string    `json:"subscription_status"`
+	TrialEndsAt        *time.Time `json:"trial_ends_at"`  
+
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
-
+     // Fecha fin de los 2 meses
+	
+	
 	// Usamos punteros (*) porque estos campos pueden ser NULL en la BD al registrarse
 	Name       *string `json:"name"`
 	Phone      *string `json:"phone"`
@@ -128,7 +132,7 @@ type UserRepository interface {
 }
 
 type AuthService interface {
-	Register(ctx context.Context, name, email, password, role string) error
+	Register(ctx context.Context, name, email, password, role, plan string, hasTrial bool) error
 	Login(ctx context.Context, email, password string) (string, error)
 	Verify(ctx context.Context, email, code string) error
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)

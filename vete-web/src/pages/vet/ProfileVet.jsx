@@ -129,7 +129,7 @@ const ProfileVet = () => {
         
         {/* BOTÓN VOLVER DINÁMICO */}
         <button 
-          onClick={handleBackNavigation} 
+          onClick={() => navigate(-1)} 
           className="mb-8 flex items-center text-slate-500 hover:text-[#1cabb0] font-bold transition-all group"
         >
           <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100 mr-3 group-hover:bg-[#e0f7f9] transition-colors">

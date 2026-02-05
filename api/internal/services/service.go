@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"time"
 	"math/big"
 	"strings"
 	"veterimap-api/internal/auth"
@@ -21,47 +22,61 @@ func NewAuthService(repo domain.UserRepository) domain.AuthService {
 	return &authService{repo: repo}
 }
 
-// Register: AHORA RECIBE 'name' PARA SER COHERENTE CON HANDLER Y REPOSITORY
-func (s *authService) Register(ctx context.Context, name, email, password, role string) error {
-	// 1. Normalización de datos (VITAL para evitar el error "Email no encontrado")
-	cleanEmail := strings.ToLower(strings.TrimSpace(email))
-	cleanName := strings.TrimSpace(name)
+func (s *authService) Register(ctx context.Context, name, email, password, role, plan string, hasTrial bool) error {
+    cleanEmail := strings.ToLower(strings.TrimSpace(email))
+    cleanName := strings.TrimSpace(name)
 
-	// 2. Hashing de contraseña
-	hashedPassword, err := auth.HashPassword(password)
-	if err != nil {
-		return err
-	}
+    hashedPassword, err := auth.HashPassword(password)
+    if err != nil {
+        return err
+    }
 
-	// 3. Generar código de verificación de 6 dígitos de forma segura
-	// Usamos un nuevo big.Int para no mutar el valor original durante el cálculo
-	min := big.NewInt(100000)
-	max := big.NewInt(900000)
-	n, _ := rand.Int(rand.Reader, max)
-	verificationCode := fmt.Sprintf("%06d", new(big.Int).Add(n, min))
+    // 1. Lógica de Suscripción (Sin cambios)
+    var subscriptionStatus = "free"
+    var trialEndsAt *time.Time
 
-	// 4. Crear el objeto User con datos limpios y UUID generado
-	u := &domain.User{
-		ID:               uuid.New(),
-		Name:             &cleanName,
-		Email:            cleanEmail,
-		Password:         hashedPassword,
-		Role:             domain.Role(role),
-		VerificationCode: verificationCode,
-		IsVerified:       false,
-	}
+    if role == string(domain.RoleProfessional) {
+        subscriptionStatus = plan 
+        if subscriptionStatus == "" {
+            subscriptionStatus = "essential"
+        }
+        if hasTrial {
+            expiration := time.Now().AddDate(0, 0, 60)
+            trialEndsAt = &expiration
+        }
+    }
 
-	// 5. Llamada al repositorio
-	if err := s.repo.CreateUser(ctx, u); err != nil {
-		return err
-	}
+    // 2. Generación del código (Sin cambios)
+    min := big.NewInt(100000)
+    max := big.NewInt(900000)
+    n, _ := rand.Int(rand.Reader, max)
+    verificationCode := fmt.Sprintf("%06d", new(big.Int).Add(n, min))
 
-	// LOG PARA TERMINAL: Muestra el email limpio para confirmar
-	log.Printf("\n==========================================\n")
-	log.Printf("📧 CÓDIGO DE VERIFICACIÓN PARA %s: %s", cleanEmail, verificationCode)
-	log.Printf("\n==========================================\n")
+    u := &domain.User{
+        ID:                 uuid.New(),
+        Name:               &cleanName,
+        Email:              cleanEmail,
+        Password:           hashedPassword,
+        Role:               domain.Role(role),
+        VerificationCode:   verificationCode,
+        IsVerified:         false,
+        SubscriptionStatus: subscriptionStatus,
+        TrialEndsAt:        trialEndsAt,
+    }
 
-	return nil
+    // 3. LLAMADA AL REPOSITORIO (CORREGIDO)
+    // Primero guardamos el error en una variable, NO hacemos return directo aquí
+    if err := s.repo.CreateUser(ctx, u); err != nil {
+        return err
+    }
+
+    // 4. LOG PARA TERMINAL (Ahora sí se ejecutará)
+    log.Printf("\n==========================================\n")
+    log.Printf("📧 CÓDIGO DE VERIFICACIÓN PARA %s: %s", cleanEmail, verificationCode)
+    log.Printf("💎 PLAN: %s | TRIAL: %v", subscriptionStatus, hasTrial)
+    log.Printf("\n==========================================\n")
+
+    return nil // Finalización exitosa
 }
 
 func (s *authService) Login(ctx context.Context, email, password string) (string, error) {

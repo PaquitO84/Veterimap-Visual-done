@@ -23,10 +23,12 @@ func NewAuthHandler(service domain.AuthService) *AuthHandler {
 // Register: Crea un nuevo usuario manejando errores de duplicidad
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name     string      `json:"name"`
-		Email    string      `json:"email"`
-		Password string      `json:"password"`
-		Role     domain.Role `json:"role"`
+		Name         string      `json:"name"`
+		Email        string      `json:"email"`
+		Password     string      `json:"password"`
+		Role         domain.Role `json:"role"`
+		SelectedPlan string      `json:"selected_plan"` // Recibimos del front
+		HasTrial     bool        `json:"has_trial"`
 	}
 
 	// 1. Decodificar el JSON del frontend
@@ -37,27 +39,23 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Llamar al servicio de autenticación
 	// Pasamos req.Name como primer argumento según la nueva firma del Service
-	if err := h.Service.Register(r.Context(), req.Name, req.Email, req.Password, string(req.Role)); err != nil {
+	if err := h.Service.Register(r.Context(), req.Name, req.Email, req.Password, string(req.Role), req.SelectedPlan, req.HasTrial); err != nil {
 
-		// Error de dominio: El usuario ya existe
 		if err == domain.ErrUserAlreadyExists {
 			responses.Error(w, http.StatusConflict, "El correo ya está registrado")
 			return
 		}
 
-		// Error de Postgres: Violación de clave única (Código 23505)
-		// Esto captura el error si el email ya existe en la DB
 		if strings.Contains(err.Error(), "23505") || strings.Contains(err.Error(), "unique constraint") {
 			responses.Error(w, http.StatusConflict, "Este correo electrónico ya está en uso")
 			return
 		}
 
-		// Cualquier otro error interno (Base de datos caída, etc.)
 		responses.Error(w, http.StatusInternalServerError, "Error al procesar el registro")
 		return
 	}
 
-	// 3. Respuesta exitosa
+	// 4. Respuesta exitosa
 	responses.JSON(w, http.StatusCreated, map[string]string{
 		"message": "Usuario registrado. Revisa el código de verificación.",
 	})

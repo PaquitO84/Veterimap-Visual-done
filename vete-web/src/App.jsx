@@ -5,6 +5,8 @@ import { useAuth } from './context/useAuth';
 // --- IMPORTACIÓN DE PÁGINAS ---
 import Login from './pages/userflow-comun/Login';
 import Registro from './pages/userflow-comun/registro';
+import Suscripciones from './pages/userflow-comun/Suscripciones';
+
 import Verify from './pages/userflow-comun/verify';
 import LandingPage from './pages/userflow-comun/landingPage';
 import Mapa from './pages/userflow-comun/Mapa';
@@ -57,6 +59,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
+        <Route path="/planes" element={<Suscripciones />} /> 
         <Route path="/verify" element={<Verify />} />
         <Route path="/mapa" element={<Mapa />} />
         <Route path="/profile-vet/:id" element={<ProfileVet />} />
@@ -66,6 +69,7 @@ function App() {
         <Route path="/clientes" element={<ProtectedRoute allowedRole="PROFESSIONAL"><Clientes /></ProtectedRoute>} />
         <Route path="/agenda-vet" element={<ProtectedRoute allowedRole="PROFESSIONAL"><AgendaVet /></ProtectedRoute>} />
         <Route path="/formulario-vet" element={<ProtectedRoute allowedRole="PROFESSIONAL"><FormularioVet /></ProtectedRoute>} />
+        
         
         {/* RUTA COMPARTIDA (CORREGIDA) */}
         <Route path="/historial-clinico/:petId" element={<ProtectedRoute allowedRole={["PROFESSIONAL", "PET_OWNER"]}><HistorialClinico /></ProtectedRoute>} />

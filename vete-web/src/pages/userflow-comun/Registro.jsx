@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from "../../services/api";
 
+
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get('plan');
+  const trialParam = searchParams.get('trial');
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'PET_OWNER'
+    // Si hay un plan en la URL, asumimos que es Profesional
+    role: planParam ? 'PROFESSIONAL' : 'PET_OWNER'
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,17 +25,22 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // CORRECCIÓN ESLINT: Eliminamos 'const response =' ya que no se usaba.
-      // Simplemente esperamos a que la promesa se resuelva o lance error.
-      await api.request('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      });
+  try {
+    // Añadimos la info del plan al objeto que enviamos al servidor
+    const dataToSend = {
+      ...formData,
+      selected_plan: planParam || 'none',
+      has_trial: trialParam === 'true'
+    };
+
+    await api.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(dataToSend)
+    });
       
       // 1. Guardamos el email para que la pantalla de verify sepa a quién verificar
       localStorage.setItem('pendingEmail', formData.email);
@@ -52,8 +63,10 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-[#f5f8f9] flex justify-center items-center p-4 font-sans">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-        <h2 className="text-3xl font-bold text-[#1cabb0] text-center mb-6">Crear cuenta</h2>
+        <h2 className="text-3xl font-bold text-[bg-brand] text-center mb-6">Crear cuenta</h2>
         
+        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700">Nombre Completo</label>
@@ -107,7 +120,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full p-4 bg-[#1cabb0] text-white font-bold rounded-xl shadow-lg hover:bg-[#168a8e] transition transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full p-4 bg-[bg-brand] text-black font-bold rounded-xl shadow-lg hover:bg-brand transition transform active:scale-95 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? 'Procesando...' : 'Registrarse'}
           </button>

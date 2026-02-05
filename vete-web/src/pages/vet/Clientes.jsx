@@ -14,7 +14,7 @@ const Clientes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState(null);
   const [professionalId, setProfessionalId] = useState(null);
-  const [appointments, setAppointments] = useState([]);
+  const [_appointments, setAppointments] = useState([]);
   
 
   // Modal states
