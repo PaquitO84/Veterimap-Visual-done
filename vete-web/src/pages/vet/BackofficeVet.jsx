@@ -8,7 +8,17 @@ const BackofficeVet = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
-  const [trialDays] = useState(52); 
+  const calculateTrialDays = (expiryDate) => {
+    if (!expiryDate) return 0;
+    const diff = new Date(expiryDate) - new Date();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return days > 0 ? days : 0;
+  };
+
+  // Obtenemos el nivel de acceso directamente del usuario del contexto
+  const accessLevel = user?.access_level || 1;
+  const trialDays = calculateTrialDays(user?.trial_ends_at);
+  const isPremium = accessLevel === 2; 
   const [loading, setLoading] = useState(true);
   const [professionalId, setProfessionalId] = useState(null);
 
@@ -64,8 +74,17 @@ const BackofficeVet = () => {
           <Link to="/backoffice-vet" className="flex items-center p-3 bg-brand rounded-lg font-bold">
             <i className="fas fa-columns mr-3 w-5"></i> Dashboard
           </Link>
-          <Link to="/agenda-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
-            <i className="fas fa-calendar-check mr-3 w-5"></i> Agenda / Citas
+          <Link 
+            to={isPremium ? "/agenda-vet" : "#"} 
+            onClick={(e) => !isPremium && e.preventDefault()}
+            className={`flex items-center p-3 rounded-lg transition ${
+              isPremium 
+                ? 'text-slate-400 hover:bg-slate-800' 
+                : 'text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            <i className="fas fa-calendar-check mr-3 w-5"></i> 
+            Agenda / Citas {!isPremium && <i className="fas fa-lock ml-auto text-xs opacity-50"></i>}
           </Link>
           <Link to="/clientes" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
             <i className="fas fa-users mr-3 w-5"></i> Clientes
@@ -204,7 +223,11 @@ const BackofficeVet = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Link to="/agenda-vet" className="text-blue-500 hover:text-blue-700 font-bold text-sm">Gestionar</Link>
+                        {isPremium ? (
+                          <Link to="/agenda-vet" className="text-blue-500 hover:text-blue-700 font-bold text-sm">Gestionar</Link>
+                        ) : (
+                          <span className="text-gray-400 text-sm italic"><i className="fas fa-lock mr-1"></i> Bloqueado</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -213,6 +236,17 @@ const BackofficeVet = () => {
             </table>
           </div>
         </div>
+        {!isPremium && (
+          <div className="mt-8 bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-2xl shadow-lg border border-slate-700 flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-white text-xl font-bold mb-1">¡Pásate al Plan PREMIUM!</h3>
+              <p className="text-slate-400 text-sm">Tu acceso actual es limitado. Activa el premium para gestionar citas y nutrir el historial clínico.</p>
+            </div>
+            <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition transform hover:scale-105">
+              Ver Planes de Suscripción
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -69,8 +69,17 @@ const ProfileVet = () => {
         const pd = data.profile_data;
 
         const processed = {
-          ...data,
-          description: pd?.bio || "Sin descripción disponible.",
+  ...data,
+  // Discriminación robusta:
+  isPremium: 
+    data.access_level === 2 || 
+    data.subscription_status === 'plan premium' || 
+    data.subscription_status === 'premium' ||
+    (data.trial_ends_at && new Date(data.trial_ends_at) > new Date()),
+  
+  description: pd?.bio || "Sin descripción disponible.",
+          
+
           logo: pd?.logo_url || null,
           main_address: pd?.addresses?.find(a => a.is_main)?.full_address || pd?.addresses?.[0]?.full_address || "Consultar dirección",
           city: pd?.addresses?.[0]?.city || "Ciudad no especificada",
@@ -156,23 +165,36 @@ const ProfileVet = () => {
             
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-4xl font-black text-slate-800 leading-tight mb-2">{profile.name}</h1>
-              <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
-                <div className="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-lg font-black text-sm flex items-center">
-                  <i className="fas fa-star mr-1.5"></i> {(profile.rating || 0).toFixed(1)}
-                </div>
-                <span className="text-slate-400 font-bold text-sm underline decoration-slate-200 decoration-2">
-                  {profile.review_count || 0} reseñas de clientes
-                </span>
+              {profile.isPremium ? (
+            <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
+              <div className="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-lg font-black text-sm flex items-center">
+                <i className="fas fa-star mr-1.5"></i> {(profile.rating || 0).toFixed(1)}
               </div>
+              <span className="text-slate-400 font-bold text-sm underline decoration-slate-200 decoration-2">
+                {profile.review_count || 0} reseñas de clientes
+              </span>
+            </div>
+          ) : (
+            <div className="mb-6 invisible"> {/* Mantenemos el espacio o lo quitamos */}
+              <span className="text-slate-300 text-sm italic">Reputación disponible en Plan Pro</span>
+            </div>
+          )}
               
               <div className="grid grid-cols-2 gap-4">
-                <a href={`tel:${profile.contact_info?.phone || profile.phone}`} className="bg-[#1cabb0] text-white py-3.5 rounded-2xl font-black text-center hover:shadow-lg hover:shadow-[#1cabb0]/20 transition active:scale-95">
-                  <i className="fas fa-phone-alt mr-2"></i> Llamar
-                </a>
-                <a href={`mailto:${profile.contact_info?.contact_email || profile.contact_email}`} className="bg-white text-[#1cabb0] border-2 border-[#1cabb0] py-3.5 rounded-2xl font-black text-center hover:bg-[#f0fafa] transition active:scale-95">
-                  <i className="fas fa-envelope mr-2"></i> Email
-                </a>
-              </div>
+          {profile.isPremium ? (
+            <a href={`tel:${profile.contact_info?.phone || profile.phone}`} className="bg-[#1cabb0] text-white py-3.5 rounded-2xl font-black text-center hover:shadow-lg hover:shadow-[#1cabb0]/20 transition active:scale-95">
+              <i className="fas fa-phone-alt mr-2"></i> Llamar
+            </a>
+          ) : (
+            <button disabled className="bg-slate-200 text-slate-400 py-3.5 rounded-2xl font-black text-center cursor-not-allowed">
+              <i className="fas fa-lock mr-2"></i> Teléfono Pro
+            </button>
+          )}
+          
+          <a href={`mailto:${profile.contact_info?.contact_email || profile.contact_email}`} className="bg-white text-[#1cabb0] border-2 border-[#1cabb0] py-3.5 rounded-2xl font-black text-center hover:bg-[#f0fafa] transition active:scale-95">
+            <i className="fas fa-envelope mr-2"></i> Email
+          </a>
+        </div>
             </div>
           </div>
         </header>
@@ -262,11 +284,28 @@ const ProfileVet = () => {
               </div>
               
               <button 
-                onClick={handleBookingClick}
-                className="w-full mt-10 bg-[#1cabb0] text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-white hover:text-[#1cabb0] transition-all active:scale-95"
+                onClick={profile.isPremium ? handleBookingClick : undefined}
+                className={`w-full mt-10 py-4 rounded-2xl font-black text-lg shadow-lg transition-all active:scale-95 ${
+                  profile.isPremium 
+                    ? "bg-[#1cabb0] text-white hover:bg-white hover:text-[#1cabb0]" 
+                    : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+                }`}
               >
-                RESERVAR CITA
+                {profile.isPremium ? (
+                  "RESERVAR CITA"
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <i className="fas fa-calendar-times"></i> Sin Reserva Online
+                  </span>
+                )}
               </button>
+
+                {/* Aviso sutil para el cliente */}
+                {!profile.isPremium && (
+                  <p className="text-[10px] text-slate-400 text-center mt-2 italic px-4">
+                    Este profesional no tiene habilitada la agenda online. Contacta por email al profesional para más información.
+                  </p>
+                )}
             </section>
 
             {/* Componente de Mapa con Leaflet */}

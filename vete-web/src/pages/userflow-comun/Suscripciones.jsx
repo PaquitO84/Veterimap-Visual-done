@@ -15,7 +15,7 @@ const Suscripciones = () => {
     trialDesc: "Accede 2 meses GRATIS al Plan PREMIUM al registrarte",
     popular: false,
     caracteristicas: [
-      { label: "Presencia en mapa", desc: "Perfil visible" },
+      { label: "Presencia en mapa", desc: "Perfil visible básico" },
       { label: "Historial clínico", desc: "Acceso de lectura limitado" }
       // Puedes descomentar y mejorar cuando lo implementes:
       // { label: "Sello Verificado", desc: "No incluido" },

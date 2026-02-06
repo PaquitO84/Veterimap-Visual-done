@@ -106,29 +106,43 @@ func (r *PostgresProfileRepository) SearchProfiles(ctx context.Context, name, ci
 func (r *PostgresProfileRepository) GetProfileDetail(ctx context.Context, id string) (*domain.ProfileDetail, error) {
 	// IMPORTANTE: id, user_id, entity_type, status, name, slug, rating, review_count, is_active son columnas reales.
 	// profile_data es la columna JSONB que mapea al struct anidado.
-	query := `SELECT id, user_id, entity_type, status, name, slug, profile_data, rating, review_count, is_active, created_at, updated_at 
-              FROM professional_entities WHERE id = $1`
+	query := `
+		SELECT 
+			p.id, p.user_id, p.entity_type, p.status, p.name, p.slug, p.profile_data, 
+			p.rating, p.review_count, p.is_active, p.created_at, p.updated_at,
+			COALESCE(u.subscription_status, 'essential'), 
+			u.trial_ends_at
+		FROM professional_entities p
+		LEFT JOIN users u ON p.user_id = u.id
+		WHERE p.id = $1`
 
 	var d domain.ProfileDetail
+	var tempUser domain.User
 
 	err := r.Conn.QueryRow(ctx, query, id).Scan(
-		&d.ID,          // Se mapea a uuid.UUID en el struct
-		&d.UserID,      // Se mapea a *uuid.UUID en el struct
-		&d.EntityType,  // string
-		&d.Status,      // string
-		&d.Name,        // string
-		&d.Slug,        // string
-		&d.ProfileData, // pgx detecta el destino Struct y la columna JSONB automáticamente
-		&d.Rating,      // float64
-		&d.ReviewCount, // int
-		&d.IsActive,    // bool
-		&d.CreatedAt,   // time.Time
-		&d.UpdatedAt,   // time.Time
+		&d.ID,                 // Se mapea a uuid.UUID en el struct
+		&d.UserID,             // Se mapea a *uuid.UUID en el struct
+		&d.EntityType,         // string
+		&d.Status,             // string
+		&d.Name,               // string
+		&d.Slug,               // string
+		&d.ProfileData,        // pgx detecta el destino Struct y la columna JSONB automáticamente
+		&d.Rating,             // float64
+		&d.ReviewCount,        // int
+		&d.IsActive,           // bool
+		&d.CreatedAt,          // time.Time
+		&d.UpdatedAt,          // time.Time
+		&d.SubscriptionStatus, // Nuevo campo de users
+		&d.TrialEndsAt,
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("error obteniendo detalle de perfil: %v", err)
 	}
+
+	tempUser.SubscriptionStatus = d.SubscriptionStatus
+	tempUser.TrialEndsAt = d.TrialEndsAt
+	d.AccessLevel = tempUser.GetAccessLevel()
 
 	return &d, nil
 }

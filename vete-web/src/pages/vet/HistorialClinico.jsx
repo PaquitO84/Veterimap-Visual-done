@@ -21,6 +21,7 @@ const HistorialClinico = () => {
     });
 
     const isProfessional = user?.role?.toUpperCase() === 'PROFESSIONAL';
+    const isPremium = user?.access_level === 2;
 
     const calculateAge = (birthDate) => {
         if (!birthDate) return "N/A";
@@ -146,11 +147,30 @@ const HistorialClinico = () => {
 
                         {isProfessional && (
                             <button 
-                                onClick={() => setShowForm(!showForm)}
-                                className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-slate-200 hover:bg-brand transition-all flex items-center justify-center gap-2"
+                                onClick={() => {
+                                    if (!isPremium) {
+                                        alert("Tu periodo de prueba ha finalizado. Activa el Plan PRO para registrar nuevas visitas.");
+                                        return;
+                                    }
+                                    setShowForm(!showForm);
+                                }}
+                                className={`${
+                                    isPremium 
+                                    ? 'bg-slate-900 hover:bg-brand shadow-slate-200' 
+                                    : 'bg-slate-400 cursor-not-allowed'
+                                } text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2`}
                             >
-                                {showForm ? <i className="fas fa-times"></i> : <i className="fas fa-plus"></i>}
-                                {showForm ? 'CANCELAR' : 'REGISTRAR VISITA'}
+                                {isPremium ? (
+                                    <>
+                                        {showForm ? <i className="fas fa-times"></i> : <i className="fas fa-plus"></i>}
+                                        {showForm ? 'CANCELAR' : 'REGISTRAR VISITA'}
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-lock"></i>
+                                        MODO SOLO LECTURA
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>
@@ -238,6 +258,20 @@ const HistorialClinico = () => {
                             </button>
                         </div>
                     </form>
+                )}
+
+                {isProfessional && !isPremium && (
+                    <div className="bg-amber-50 border border-amber-200 p-6 rounded-[2rem] mb-8 flex items-center gap-4">
+                        <div className="bg-amber-500 text-white w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
+                            <i className="fas fa-crown"></i>
+                        </div>
+                        <div>
+                            <p className="text-amber-900 font-black text-sm">Acceso Limitado detectado</p>
+                            <p className="text-amber-700 text-xs font-bold italic">
+                                Puedes consultar el historial pasado, pero necesitas el <strong>Plan PRO</strong> para añadir nuevos diagnósticos.
+                            </p>
+                        </div>
+                    </div>
                 )}
 
                 <div className="space-y-8 mt-4">

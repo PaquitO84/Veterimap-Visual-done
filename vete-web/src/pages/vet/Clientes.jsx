@@ -7,6 +7,7 @@ const Clientes = () => {
   const { user, logout } = useAuth();
   console.log("Usuario actual en el contexto:", user);
   const navigate = useNavigate();
+  const isPremium = user?.access_level === 2;
   const [profile, setProfile] = useState(null);
 
   const [clients, setClients] = useState([]);
@@ -145,8 +146,17 @@ useEffect(() => {
             <i className="fas fa-columns mr-3 w-5 text-center"></i> Dashboard
           </Link>
 
-          <Link to="/agenda-vet" className="flex items-center p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
-            <i className="fas fa-calendar-check mr-3 w-5 text-center"></i> Agenda / Citas
+          <Link 
+            to={isPremium ? "/agenda-vet" : "#"} 
+            onClick={(e) => !isPremium && e.preventDefault()}
+            className={`flex items-center p-3 rounded-lg transition ${
+              isPremium 
+                ? 'text-slate-400 hover:bg-slate-800' 
+                : 'text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            <i className="fas fa-calendar-check mr-3 w-5 text-center"></i> 
+            Agenda / Citas {!isPremium && <i className="fas fa-lock ml-auto text-xs opacity-50"></i>}
           </Link>
 
           {/* ACTIVO */}
@@ -274,6 +284,17 @@ useEffect(() => {
             )}
           </div>
         </div>
+        {!isPremium && (
+          <div className="mt-8 bg-gradient-to-r from-slate-800 to-slate-900 p-8 rounded-2xl shadow-lg border border-slate-700 flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-white text-xl font-bold mb-1">¡Pásate al Plan PREMIUM!</h3>
+              <p className="text-slate-400 text-sm">Tu acceso actual es limitado. Activa el premium para gestionar citas y nutrir el historial clínico.</p>
+            </div>
+            <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition transform hover:scale-105">
+              Ver Planes de Suscripción
+            </button>
+          </div>
+        )}
       </main>
       
 
@@ -339,16 +360,27 @@ useEffect(() => {
                         </button>
                     </div>
                     <div className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
+    <div className={`mb-6 p-4 rounded-2xl border flex items-center justify-between ${isPremium ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-200'}`}>
     <div>
-        <p className="text-blue-800 font-black text-sm">Consulta en curso</p>
-        <p className="text-brand text-[11px] font-bold tracking-tighter uppercase italic">Registra el diagnóstico y tratamiento actual</p>
+        <p className={`${isPremium ? 'text-blue-800' : 'text-gray-500'} font-black text-sm`}>
+            {isPremium ? 'Consulta en curso' : 'Gestión Médica Limitada'}
+        </p>
+        <p className="text-[11px] font-bold tracking-tighter uppercase italic text-slate-400">
+            {isPremium ? 'Registra el diagnóstico y tratamiento actual' : 'Solo lectura: Activa Premium para añadir registros'}
+        </p>
     </div>
     <button
-        onClick={() => navigate(`/historial-clinico/${currentPet.id}`)}
-        className="bg-brand text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform active:scale-95 flex items-center gap-2"
+        onClick={() => isPremium && navigate(`/historial-clinico/${currentPet.id}`)}
+        className={`${
+            isPremium 
+            ? 'bg-brand hover:bg-blue-700 shadow-blue-200' 
+            : 'bg-slate-400 cursor-not-allowed opacity-70'
+        } text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg transition-all flex items-center gap-2`}
     >
-        <i className="fas fa-stethoscope"></i> Atender Paciente
+        <i className={isPremium ? "fas fa-stethoscope" : "fas fa-lock"}></i> 
+        {isPremium ? 'Atender Paciente' : 'Función Pro'}
     </button>
+</div>
 </div>
                     {history.length > 0 ? (
                       <div className="space-y-4">

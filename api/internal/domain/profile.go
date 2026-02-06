@@ -90,6 +90,9 @@ type ProfileSummary struct {
 
 type ProfileDetail struct {
 	ProfessionalEntity
+	SubscriptionStatus string     `json:"subscription_status"`
+	TrialEndsAt        *time.Time `json:"trial_ends_at"`
+	AccessLevel        int        `json:"access_level"`
 }
 
 type ProfileRepository interface {

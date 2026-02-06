@@ -84,31 +84,33 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// MeHandler: Devuelve la identidad del usuario logueado
+// MeHandler: Devuelve la identidad del usuario logueado con su nivel de acceso
 func (h *AuthHandler) MeHandler(w http.ResponseWriter, r *http.Request) {
-	// Usamos la función unificada en internal/auth/auth.go
-	claims, ok := auth.GetClaims(r.Context())
-	if !ok {
-		responses.Error(w, http.StatusUnauthorized, "No autorizado")
-		return
-	}
+    claims, ok := auth.GetClaims(r.Context())
+    if !ok {
+        responses.Error(w, http.StatusUnauthorized, "No autorizado")
+        return
+    }
 
-	uid, err := uuid.Parse(claims.UserID)
-	if err != nil {
-		responses.Error(w, http.StatusBadRequest, "Token corrupto")
-		return
-	}
+    uid, err := uuid.Parse(claims.UserID)
+    if err != nil {
+        responses.Error(w, http.StatusBadRequest, "Token corrupto")
+        return
+    }
 
-	user, err := h.Service.GetUserByID(r.Context(), uid)
-	if err != nil {
-		responses.Error(w, http.StatusNotFound, "Usuario no encontrado")
-		return
-	}
+    user, err := h.Service.GetUserByID(r.Context(), uid)
+    if err != nil {
+        responses.Error(w, http.StatusNotFound, "Usuario no encontrado")
+        return
+    }
 
+    
 	responses.JSON(w, http.StatusOK, map[string]interface{}{
-		"user": user,
-	})
+        "user":         user,
+        "access_level": user.GetAccessLevel(), 
+    })
 }
+
 
 // Verify: Valida el código de verificación
 func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {

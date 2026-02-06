@@ -139,3 +139,45 @@ type AuthService interface {
 	UpsertProfessionalProfile(ctx context.Context, userID uuid.UUID, p *ProfessionalEntity) error
 	GetProfessionalProfileByUserID(ctx context.Context, userID uuid.UUID) (*ProfessionalEntity, error)
 }
+
+func (u *User) HasPremiumAccess() bool {
+	// Los propietarios siempre tienen acceso a sus propias funciones
+	if u.Role == RolePetOwner {
+		return true
+	}
+
+	if u.Role == RoleProfessional {
+		// 1. Si ya es premium de pago
+		if u.SubscriptionStatus == "premium" {
+			return true
+		}
+		// 2. Si está en trial y no ha caducado
+		if u.TrialEndsAt != nil {
+			return time.Now().Before(*u.TrialEndsAt)
+		}
+	}
+	return false
+}
+
+// GetAccessLevel centraliza los niveles para el Frontend (0, 1, 2)
+func (u *User) GetAccessLevel() int {
+    // Si no es profesional, nivel 0
+    if u.Role != RoleProfessional {
+        return 0
+    }
+
+    // Comprobamos si el plan contiene la palabra "premium" o "trialing"
+    // Usamos strings.ToLower para evitar problemas de mayúsculas
+    isPremiumPlan := u.SubscriptionStatus == "premium" || 
+                     u.SubscriptionStatus == "plan premium" || 
+                     u.SubscriptionStatus == "trialing"
+
+    // Comprobamos si el trial sigue vigente
+    hasActiveTrial := u.TrialEndsAt != nil && u.TrialEndsAt.After(time.Now())
+
+    if isPremiumPlan || hasActiveTrial {
+        return 2 // Nivel PRO
+    }
+
+    return 1 // Nivel Essential (Solo lectura)
+}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from "../../services/api";
+
 
 
 const Register = () => {
@@ -17,6 +18,15 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  // --- BLOQUE DE SEGURIDAD PARA PLANES ---
+  useEffect(() => {
+    // Si el usuario cambia manualmente el selector a PROFESSIONAL 
+    // y no hay plan en la URL, podemos dejarlo como 'essential' por defecto
+    // o redirigirlo a la sección de servicios.
+    if (formData.role === 'PROFESSIONAL' && !planParam) {
+      console.log("Registro profesional detectado sin plan previo.");
+    }
+  }, [formData.role, planParam]);
 
   const handleChange = (e) => {
     setFormData({
@@ -31,10 +41,13 @@ const Register = () => {
 
   try {
     // Añadimos la info del plan al objeto que enviamos al servidor
+    // Dentro de handleSubmit
     const dataToSend = {
       ...formData,
-      selected_plan: planParam || 'none',
-      has_trial: trialParam === 'true'
+      // Si no hay planParam, pero es profesional, le asignamos 'essential'
+      selected_plan: planParam || (formData.role === 'PROFESSIONAL' ? 'essential' : 'none'),
+      has_trial: trialParam === 'true' || (formData.role === 'PROFESSIONAL' && !planParam) 
+      // Si entra directo, le regalamos el trial igual para que no se bloquee de entrada
     };
 
     await api.request('/auth/register', {

@@ -8,7 +8,7 @@ import Registro from './pages/userflow-comun/registro';
 import Suscripciones from './pages/userflow-comun/Suscripciones';
 
 import Verify from './pages/userflow-comun/verify';
-import LandingPage from './pages/userflow-comun/landingPage';
+import LandingPage from './pages/userflow-comun/LandingPage';
 import Mapa from './pages/userflow-comun/Mapa';
 
 import BackofficeVet from './pages/vet/BackofficeVet';
@@ -24,7 +24,7 @@ import FormularioOwner from './pages/owner/FormularioOwner';
 import MisMascotas from './pages/owner/MisMascotas';
 import CitasOwner from './pages/owner/CitasOwner';
 
-const ProtectedRoute = ({ children, allowedRole }) => {
+const ProtectedRoute = ({ children, allowedRole, minLevel = 0 }) => {
   const { user, loadingProfile } = useAuth();
 
   if (loadingProfile) {
@@ -36,16 +36,27 @@ const ProtectedRoute = ({ children, allowedRole }) => {
     );
   }
 
+  // 1. Si no hay usuario, al login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  const hasPermission = Array.isArray(allowedRole) 
+  // 2. Verificar Rol
+  const hasRolePermission = Array.isArray(allowedRole) 
     ? allowedRole.includes(user.role) 
     : user.role === allowedRole;
 
-  if (allowedRole && !hasPermission) {
+  if (allowedRole && !hasRolePermission) {
     return <Navigate to="/" replace />;
+  }
+
+  // 3. Verificar Nivel de Acceso (NUEVO)
+  // Si la ruta pide un nivel mínimo (ej: 2) y el usuario tiene menos (ej: 1)
+  // Lo enviamos al backoffice para que vea el aviso de suscripción
+  const currentAccessLevel = user.access_level || 0;
+  if (minLevel > 0 && currentAccessLevel < minLevel) {
+    console.warn(`Acceso denegado: Se requiere nivel ${minLevel}, el usuario tiene ${currentAccessLevel}`);
+    return <Navigate to="/backoffice-vet" replace />;
   }
 
   return children;
@@ -67,6 +78,8 @@ function App() {
         {/* RUTAS VETERINARIO */}
         <Route path="/backoffice-vet" element={<ProtectedRoute allowedRole="PROFESSIONAL"><BackofficeVet /></ProtectedRoute>} />
         <Route path="/clientes" element={<ProtectedRoute allowedRole="PROFESSIONAL"><Clientes /></ProtectedRoute>} />
+        {/* CAMBIO AQUÍ: Añadimos minLevel={2} */}
+        <Route path="/agenda-vet"  element={ <ProtectedRoute allowedRole="PROFESSIONAL" minLevel={2}><AgendaVet /></ProtectedRoute>} />
         <Route path="/agenda-vet" element={<ProtectedRoute allowedRole="PROFESSIONAL"><AgendaVet /></ProtectedRoute>} />
         <Route path="/formulario-vet" element={<ProtectedRoute allowedRole="PROFESSIONAL"><FormularioVet /></ProtectedRoute>} />
         

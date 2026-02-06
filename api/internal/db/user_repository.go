@@ -66,29 +66,30 @@ func (r *PostgresUserRepository) CreateUser(ctx context.Context, u *domain.User)
 }
 
 func (r *PostgresUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	// Definimos el orden de las columnas explícitamente (12 columnas)
-	query := `
+    // Añadimos trial_ends_at a la consulta (ahora son 13 columnas)
+    query := `
         SELECT 
             id, email, password, role, is_verified, verification_code, 
-            subscription_status, name, phone, city, address, postal_code 
+            subscription_status, trial_ends_at, name, phone, city, address, postal_code 
         FROM users 
         WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))`
 
-	var u domain.User
-	err := r.Conn.QueryRow(ctx, query, email).Scan(
-		&u.ID,                 // 1
-		&u.Email,              // 2
-		&u.Password,           // 3
-		&u.Role,               // 4
-		&u.IsVerified,         // 5
-		&u.VerificationCode,   // 6
-		&u.SubscriptionStatus, // 7
-		&u.Name,               // 8 (ahora acepta NULL)
-		&u.Phone,              // 9 (ahora acepta NULL)
-		&u.City,               // 10 (ahora acepta NULL)
-		&u.Address,            // 11 (ahora acepta NULL)
-		&u.PostalCode,         // 12 (ahora acepta NULL)
-	)
+    var u domain.User
+    err := r.Conn.QueryRow(ctx, query, email).Scan(
+        &u.ID,                 // 1
+        &u.Email,              // 2
+        &u.Password,           // 3
+        &u.Role,               // 4
+        &u.IsVerified,         // 5
+        &u.VerificationCode,   // 6
+        &u.SubscriptionStatus, // 7
+        &u.TrialEndsAt,        // 8 - NUEVO: Ahora capturamos la fecha de la DB
+        &u.Name,               // 9
+        &u.Phone,              // 10
+        &u.City,               // 11
+        &u.Address,            // 12
+        &u.PostalCode,         // 13
+    )
 
 	if err != nil {
 		return nil, err
@@ -112,15 +113,24 @@ func (r *PostgresUserRepository) VerifyUser(ctx context.Context, email string) e
 }
 
 func (r *PostgresUserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
-	// Añadimos name, phone, city, address, postal_code
-	query := `SELECT id, email, role, is_verified, subscription_status, name, phone, city, address, postal_code 
+    // Añadimos trial_ends_at a la consulta
+    query := `SELECT id, email, role, is_verified, subscription_status, trial_ends_at, name, phone, city, address, postal_code 
               FROM users WHERE id = $1`
 
-	var u domain.User
-	err := r.Conn.QueryRow(ctx, query, id).Scan(
-		&u.ID, &u.Email, &u.Role, &u.IsVerified, &u.SubscriptionStatus,
-		&u.Name, &u.Phone, &u.City, &u.Address, &u.PostalCode,
-	)
+    var u domain.User
+    err := r.Conn.QueryRow(ctx, query, id).Scan(
+        &u.ID, 
+        &u.Email, 
+        &u.Role, 
+        &u.IsVerified, 
+        &u.SubscriptionStatus,
+        &u.TrialEndsAt, // NUEVO: Ahora cargamos la fecha para validaciones de acceso
+        &u.Name, 
+        &u.Phone, 
+        &u.City, 
+        &u.Address, 
+        &u.PostalCode,
+    )
 	if err != nil {
 		return nil, err
 	}

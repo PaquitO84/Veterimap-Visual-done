@@ -116,10 +116,11 @@ const Login = () => {
         </form>
 
         <div className="mt-8 text-center text-slate-500 text-sm font-medium">
-          ¿Aún no tienes cuenta?{' '}
-          <Link to="/registro" className="text-brand font-bold hover:underline">
-            Crea una aquí
-          </Link>
+    ¿Aún no tienes cuenta?{' '}
+    {/* Redirigimos a la sección de servicios/planes de la Landing */}
+    <Link to="/LandingPage" className="text-brand font-bold hover:underline">
+        Crea una aquí
+    </Link>
         </div>
       </div>
     </div>

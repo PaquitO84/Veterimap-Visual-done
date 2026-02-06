@@ -34,28 +34,36 @@ export const AuthProvider = ({ children }) => {
     const [loadingProfile, setLoadingProfile] = useState(true);
 
     // Definimos la función para que sea accesible desde fuera (login, etc.)
-    const checkProfileStatus = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setLoadingProfile(false);
-            return;
-        }
+    // Dentro de src/context/AuthContext.js
 
-        try {
-            const response = await fetch('http://localhost:8080/api/me', {
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+const checkProfileStatus = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        setLoadingProfile(false);
+        return;
+    }
 
-            if (response.ok) {
+    try {
+        const response = await fetch('http://localhost:8080/api/me', {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
                 const data = await response.json();
+                
+                // --- MODIFICACIÓN AQUÍ ---
+                // Sincronizamos todo lo que el Backend nos envía sobre la suscripción
                 setUser(prev => ({
                     ...prev,
-                    ...data.user,
-                    has_profile: data.has_profile
+                    ...data.user, // Trae email, role, trial_ends_at, etc.
+                    access_level: data.access_level, // Nivel 0, 1, 2
+                    has_profile: data.has_profile 
                 }));
+                // --------------------------
+
             } else if (response.status === 401) {
                 logout();
             }
